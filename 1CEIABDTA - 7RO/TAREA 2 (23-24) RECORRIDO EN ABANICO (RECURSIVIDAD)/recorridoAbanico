@@ -1,47 +1,16 @@
+import numpy as np
+import matplotlib.pyplot as plt
+# Crear un array de 10x10 lleno de ceros
+MAZE = np.zeros((10, 10))
+MAZE[0, :] = 1
+MAZE[-1, :] = 1
+MAZE[:, 0] = 1
+MAZE[:, -1] = 1
 
-
-class casilla:
-    def __init__(self, XtableSize:int, x, y, isTheGoal=False, legalMoves = ((-1,-1), (-1,0), (-1,1), (0, -1), (0,0), (0,1), (1,-1), (1,0), (1,1))):
-        self.XtableSize = XtableSize
-        self.x = x
-        self.y = y
-        self.isTheGoal = isTheGoal
-        self.legalMoves = legalMoves
-            # legalMoves es un array con las posiciones legales
-            # (x, y)  -> ( 1,  1 ) = (derecha, arriba)
-            #            ( -1, 0 ) = (izquierda, quieto)
-        self.shape = ""
-        self.shapeModel = {(-1, 1):"/", (0,1): "^^", (1,1):"\\", (-1,0): "|", (0,0): "  ", (1,0):"|", (-1,-1): "\\", (0, -1): "_", (1,-1):"/", }
-        for indice, (movement, char) in enumerate(self.shapeModel.items()):
-            if (movement in self.legalMoves):
-                self.shape += char
-            else:
-                self.shape += " "
-            if (movement[0]+2) % 3 == 0:
-                self.shape += "\n"
-        
-            # shape es un string con el caracter que representa la casilla
-
-    def showLegalMoves(self):
-        print(self.legalMoves)
-    
-    def isLegalMove(self, x, y):
-        return (x, y) in self.legalMoves
-    
-
-class tablero:
-    def __init__(self, X_eje, Y_eje):
-        self.X_eje = X_eje
-        self.Y_eje = Y_eje
-        self.tablero = [[casilla(self.X_eje, x, y) for x in range(self.X_eje)] for y in range(self.Y_eje)]
-        
-    def showTablero(self):
-        for i in range(self.X_eje):
-            for j in range(self.Y_eje):
-                print(self.tablero[i][j].shape, end = " ")
-            print()
-                
-                
-tablero = tablero(3, 3)
-tablero.showTablero()
-    
+def visualize_example(x): 
+    plt.figure() 
+    plt.imshow(x) 
+    plt.colorbar() 
+    plt.grid(False) 
+    plt.show()
+visualize_example(MAZE)
