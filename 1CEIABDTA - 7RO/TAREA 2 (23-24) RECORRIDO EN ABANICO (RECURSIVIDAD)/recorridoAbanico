@@ -10,7 +10,7 @@ MAZE[:, -1] = 1
 MARK = MAZE[:]
 
                   #[y, x]
-MOVE = np.array([ [0,-1], [1,0], [0, 1], [-1, 0], [1,1], [-1,1], [-1,-1], [1,-1] ])  # izquierda, abajo, derecha, arriba, abajo-izquierda, arriba-derecha, arriba-izquierda, abajo-izquierda
+MOVE = np.array([ [0,-1], [1,0], [0, 1], [-1, 0], [1,1], [-1,1], [-1,-1], [1,-1] ])  # izquierda, abajo, derecha, arriba, abajo-derecha, arriba-derecha, arriba-izquierda, abajo-izquierda
 
 class Agente:
     def __init__(self, x, y):
@@ -31,8 +31,7 @@ class Place:
         print("( " + self.fila+ "," +self.columna+")")
 
 Agente = Agente(1, 1)
-
-# Agente.mover(2, MARK)
+Agente.mover(4, MARK)
 def visualize_example(x): 
     plt.figure()
     plt.imshow(x)
