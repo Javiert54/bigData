@@ -20,12 +20,18 @@ class Agente:
         self.x += MOVE[direccion, 0]
         self.y += MOVE[direccion, 1]
 
+class Place: 
+    def __init__(self, fila, columna):
+        self.fila = fila
+        self.columna = columna
+    def mostrar(self):
+        print("( " + self.fila+ "," +self.columna+")")
 
 
 def visualize_example(x): 
-    plt.figure() 
-    plt.imshow(x) 
-    plt.colorbar() 
-    plt.grid(False) 
+    plt.figure()
+    plt.imshow(x)
+    plt.colorbar()
+    plt.grid(False)
     plt.show()
 visualize_example(MAZE)
