@@ -13,15 +13,16 @@ MARK = MAZE[:]
 MOVE = np.array([ [0,-1], [1,0], [0, 1], [-1, 0], [1,1], [-1,1], [-1,-1], [1,-1] ])  # izquierda, abajo, derecha, arriba, abajo-derecha, arriba-derecha, arriba-izquierda, abajo-izquierda
 
 class Agente:
-    def __init__(self, x, y):
+    def __init__(self, x, y, color):
         self.x = x
         self.y = y
-        MARK[self.x, self.y] = 2
+        self.color = color
+        MARK[self.x, self.y] = color
 
     def mover(self, direccion, mark):
         self.x += MOVE[direccion, 0]
         self.y += MOVE[direccion, 1]
-        mark[self.x, self.y] = 2
+        mark[self.x, self.y] = color
 
 class Place: 
     def __init__(self, fila, columna):
@@ -30,8 +31,9 @@ class Place:
     def mostrar(self):
         print("( " + self.fila+ "," +self.columna+")")
 
-Agente = Agente(1, 1)
-Agente.mover(4, MARK)
+Agente = Agente(1, 1, 2)
+# Goal =   Agente(9, 9, 3)
+# Agente.mover(4, MARK)
 def visualize_example(x): 
     plt.figure()
     plt.imshow(x)
