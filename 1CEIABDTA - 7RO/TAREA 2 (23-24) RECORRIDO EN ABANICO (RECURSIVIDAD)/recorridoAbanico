@@ -1,28 +1,32 @@
 import numpy as np
 import matplotlib.pyplot as plt
+
 # Crear un array de 10x10 lleno de ceros
-MAZE = np.zeros((10, 10))
-MAZE[0, :] = 1
-MAZE[-1, :] = 1
-MAZE[:, 0] = 1
-MAZE[:, -1] = 1
-
+def createMaze(x, y):
+    MAZE = np.zeros((x, y))
+    MAZE[0, :] = 1
+    MAZE[-1, :] = 1
+    MAZE[:, 0] = 1
+    MAZE[:, -1] = 1
+    return MAZE
+MAZE = createMaze(10, 10)
 MARK = MAZE[:]
-
                   #[y, x]
 MOVE = np.array([ [0,-1], [1,0], [0, 1], [-1, 0], [1,1], [-1,1], [-1,-1], [1,-1] ])  # izquierda, abajo, derecha, arriba, abajo-derecha, arriba-derecha, arriba-izquierda, abajo-izquierda
 
 class Agente:
-    def __init__(self, x, y, color):
+    def __init__(self, x, y, color, traceColor=0):
         self.x = x
         self.y = y
         self.color = color
-        MARK[self.x, self.y] = color
+        self.trace = traceColor
+        MARK[self.x, self.y] = self.color
 
     def mover(self, direccion, mark):
+        mark[self.x, self.y] = self.trace
         self.x += MOVE[direccion, 0]
         self.y += MOVE[direccion, 1]
-        mark[self.x, self.y] = color
+        mark[self.x, self.y] = self.color #Esto es para que marque de color donde ya hemnos estado
 
 class Place: 
     def __init__(self, fila, columna):
@@ -31,13 +35,13 @@ class Place:
     def mostrar(self):
         print("( " + self.fila+ "," +self.columna+")")
 
-Agente = Agente(1, 1, 2)
-# Goal =   Agente(9, 9, 3)
-# Agente.mover(4, MARK)
+walker = Agente(1, 1, 2, 3)  #Este recorrerá el laberinto en busca de la meta
+goal =   Agente(8, 8, 4)  #Este será la meta
+# walker.mover(2, MARK)
 def visualize_example(x): 
     plt.figure()
     plt.imshow(x)
     plt.colorbar()
     plt.grid(False)
     plt.show()
-visualize_example(MAZE)
+visualize_example(MARK)
