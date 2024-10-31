@@ -14,7 +14,7 @@ MARK = MAZE[:]
                   #[y, x]
 MOVE = np.array([ [0,-1], [1,0], [0, 1], [-1, 0], [1,1], [-1,1], [-1,-1], [1,-1] ])  # izquierda, abajo, derecha, arriba, abajo-derecha, arriba-derecha, arriba-izquierda, abajo-izquierda
 
-def dfs(walker, mark, visited:set, blackList:set):
+def dfs(walker, mark, visited:set= set(), blackList:set= set()):
     neighCells= neighbors(walker.x, walker.y)
     if (walker.y, walker.x) == (goal.y, goal.x):
         print("Encontrado")
@@ -29,12 +29,12 @@ def dfs(walker, mark, visited:set, blackList:set):
         new_y = walker.y + MOVE[direccion,0]
         print(f"neighbors({walker.y}, {walker.x}):", neighCells)
         if mark[new_y, new_x] != 1 and (new_y, new_x) not in blackList: # Asegúrate de que no se salga de los límites y no sea un obstáculo
-            if mark[new_y, new_x] == 0:
+            if mark[new_y, new_x] in (0, 4):
 
                 walker.mover(direccion, MARK)
                 if dfs(walker, mark, visited, blackList):
                     return True
-            elif mark[new_y, new_x] == 3 and 0 not in neighCells:
+            elif mark[new_y, new_x] == 3 and 0 not in neighCells.values():
                 walker.mover(direccion, MARK)
                 if dfs(walker, mark, visited, blackList):
                     return True
@@ -42,10 +42,8 @@ def dfs(walker, mark, visited:set, blackList:set):
     return False
 
 def neighbors(x, y):
-    result = []
-    for dy, dx in MOVE:
-        result.append((int(x + dx), int(y + dy)))
-    return result
+    result = { (int(y+ dy), int(x + dx)): MARK[int(y+ dy), int(x + dx)] for dy, dx in MOVE}
+    return dict(result)
 
 class Agente:
     def __init__(self, x, y, color, traceColor=0):
@@ -73,7 +71,7 @@ class Place:
 walker = Agente(1, 1, 2, 3)  #Este recorrerá el laberinto en busca de la meta
 goal =   Agente(8, 8, 4)  #Este será la meta
 # walker.mover(2, MARK)
-dfs(walker, MARK, set(), set())
+dfs(walker, MARK)
 def visualize_example(x): 
     plt.figure()
     plt.imshow(x)
