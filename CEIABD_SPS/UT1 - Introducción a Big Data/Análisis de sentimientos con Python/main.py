@@ -1,17 +1,15 @@
 from textblob import TextBlob
+import pandas as pd
 
-text_1 = "The movie was so awesome."
-text_2 = "The food here tastes terrible."
+# Reemplaza 'ruta_del_archivo.csv' con la ruta de tu archivo CSV
+df = pd.read_csv('CEIABD_SPS\\UT1 - Introducción a Big Data\\Análisis de sentimientos con Python\\data.csv')
 
-#Determining the Polarity 
-p_1 = TextBlob(text_1).sentiment.polarity
-p_2 = TextBlob(text_2).sentiment.polarity
-
-#Determining the Subjectivity
-s_1 = TextBlob(text_1).sentiment.subjectivity
-s_2 = TextBlob(text_2).sentiment.subjectivity
-
-print("Polarity of Text 1 is", p_1)
-print("Polarity of Text 2 is", p_2)
-print("Subjectivity of Text 1 is", s_1)
-print("Subjectivity of Text 2 is", s_2)
+numberOfSentences = int(input("Introduzca el número de sentencias a analizar: "))
+for index, row in df.iterrows():
+    text = row['Sentence'] 
+    sentiment = row['Sentiment'] 
+    print(f"SENTENCE: \"{text}\", || SENTIMENT: {sentiment}")
+    print("Polarity of Text 1 is",TextBlob(text).sentiment.polarity)
+    print("Subjectivity of Text 1 is", TextBlob(text).sentiment.subjectivity)
+    if index >= numberOfSentences:
+        break
