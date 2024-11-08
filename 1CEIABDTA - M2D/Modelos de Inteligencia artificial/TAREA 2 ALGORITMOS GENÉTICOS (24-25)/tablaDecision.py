@@ -13,7 +13,7 @@ def chooseTable(fraccionado:bool, credito:bool, debito:bool):
         return False
     elif( fraccionado and credito and not debito):
         return True
-    else:
+    else: #Si todo es True, entonces aceptamos
         return True
 
 def getValue(valueName:str):
