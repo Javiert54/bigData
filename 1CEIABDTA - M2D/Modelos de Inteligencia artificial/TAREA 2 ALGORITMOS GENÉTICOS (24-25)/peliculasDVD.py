@@ -1,7 +1,7 @@
 def calcularCombinaciones(numeroDePeliculas):
-    #Podemos calcular las combinaciones N bits con el siguiente código:
+    # Podemos calcular las combinaciones N bits con el siguiente código:
     result = tuple( format(decimal, 'b').zfill(numeroDePeliculas) for decimal in range(2** (numeroDePeliculas+1) ))
-		# con format(decimal, 'b') obtenemos el binario de decimal, y con zfill(numeroDePeliculas) lo rellenamos con ceros a la izquierda
+	# Con format(decimal, 'b') obtenemos el binario de decimal, y con zfill(numeroDePeliculas) lo rellenamos con ceros a la izquierda
     return result
 
 #print(calcularCombinaciones(12)) # Imprime 8192 combinaciones
@@ -28,3 +28,17 @@ peliculas = [
     Pelicula('El Cuerpo', 'SUSPENSE', 2.082),
     Pelicula('15 años y un día', 'SUSPENSE', 2.321)
 ]
+
+
+def fitness(peliculas, combinacion, tamDisco: float):
+    result = 0
+    pesoTotal = 0
+    for index, caracter in enumerate(combinacion):
+        if caracter == '1':
+            pesoTotal += peliculas[index].pesoGB
+    result = 1/(tamDisco - pesoTotal)
+    return f"""Peso total: {pesoTotal}
+Tamaño disco: {tamDisco}
+Resultado: {result}
+          """
+print(fitness(peliculas, "100010000010", 4.5))
