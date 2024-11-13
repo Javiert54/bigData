@@ -25,19 +25,19 @@ peliculas = (
 )
 
 
-def fitness(peliculas, combinacion: str, tamaño_dvd: float, restricciones_genero: tuple):
+def fitness(peliculas, cromosoma: str, tamaño_dvd: float, restricciones_genero: tuple):
     """
     Calcula qué tan adecuado es un "individuo" (una combinación de películas) basado en el tamaño de DVD y restricciones de género. 
     Penaliza combinaciones que excedan el tamaño del DVD o que se mezclen ciertos géneros o títulos específicos.
     USO: fitness_score = fitness(peliculas, "000001001010", (("COMEDIA", "TERROR")))
     """
-    if len(combinacion) != len(peliculas):
-        return f"ERROR: La longitud de la combinación no coincide con la cantidad de películas. \n Longitud combinación: {len(combinacion)} Cantidad de películas:  {len(peliculas)}"
+    if len(cromosoma) != len(peliculas):
+        return f"ERROR: La longitud de la combinación no coincide con la cantidad de películas. \n Longitud combinación: {len(cromosoma)} Cantidad de películas:  {len(peliculas)}"
     
     tamaño_total = 0
     generos = set()
     titulos = set()
-    for index, bit in enumerate(combinacion):
+    for index, bit in enumerate(cromosoma):
         if bit == "0":
             continue
         tamaño_total += peliculas[index].pesoGB
