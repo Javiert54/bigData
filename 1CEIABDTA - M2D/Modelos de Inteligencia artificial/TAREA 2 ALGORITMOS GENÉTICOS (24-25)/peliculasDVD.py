@@ -113,7 +113,7 @@ def algoritmogenetico(peliculas, tamaño_dvd, restricciones_genero, tamano_pobla
     return mejor_individuo, mejor_aptitud, peliculasMejorIndividuo
 
 
-tamaño_dvd = 13.3
+tamaño_dvd = 4.7
 restricciones_genero = (("COMEDIA", "TERROR"))
 tamano_poblacion = 200
 generaciones = 60
@@ -121,13 +121,12 @@ tasa_mutacion = 0.1
 
 mejor_individuo, mejor_aptitud, peliculasMejorIndividuo = algoritmogenetico(peliculas, tamaño_dvd, restricciones_genero, tamano_poblacion, generaciones, tasa_mutacion)
 print(f"Mejor individuo: {mejor_individuo}")
-print(f"Mejor aptitud: {mejor_aptitud}")
+print(f"Peso total: {mejor_aptitud}G")
 print("Películas del mejor individuo:")
 pesoTotal = 0
 for pelicula in peliculasMejorIndividuo:
     print(pelicula.__str__())
     pesoTotal += pelicula.pesoGB
-print(f"Total de peso: {pesoTotal}GB")
 
 
 
