@@ -54,7 +54,7 @@ def fitness(peliculas, combinacion: str, tamaño_dvd: float, restricciones_gener
 
 def poblacionInicial(tamano_poblacion: int):
     # Genera una población inicial de individuos aleatorios.
-    poblacion = [random.sample(range(len(peliculas)), random.randint(1, len(peliculas))) for _ in range(tamano_poblacion)]
+    poblacion = tuple(random.sample(range(len(peliculas)), random.randint(1, len(peliculas))) for _ in range(tamano_poblacion))
     return poblacion  # Devuelve la población inicial
 
 def cruce(padre1: str, padre2: str):
