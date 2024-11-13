@@ -32,15 +32,16 @@ def fitness(peliculas, combinacion: str, tamaño_dvd: float, restricciones_gener
     """
     if len(combinacion) != len(peliculas):
         return f"ERROR: La longitud de la combinación no coincide con la cantidad de películas. \n Longitud combinación: {len(combinacion)} Cantidad de películas:  {len(peliculas)}"
+    
     tamaño_total = 0
     generos = set()
     titulos = set()
-    for bit in combinacion:
+    for index, bit in enumerate(combinacion):
         if bit == "0":
             continue
-        tamaño_total += peliculas[bit].pesoGB
-        generos.add(peliculas[bit].genero)
-        titulos.add(peliculas[bit].titulo)
+        tamaño_total += peliculas[index].pesoGB
+        generos.add(peliculas[index].genero)
+        titulos.add(peliculas[index].titulo)
     
     if tamaño_total > tamaño_dvd:
         return 0  # Penaliza si excede el tamaño del DVD
@@ -56,10 +57,11 @@ def fitness(peliculas, combinacion: str, tamaño_dvd: float, restricciones_gener
 
 def poblacionInicial(tamano_poblacion: int):
     # Genera una población inicial de individuos aleatorios.
-    poblacion = tuple(random.sample(range(len(peliculas)), random.randint(1, len(peliculas))) for _ in range(tamano_poblacion))
+    poblacion =  tuple("".join(tuple (str(random.randint(0,1)) for _ in range(len(peliculas)))) for _ in range(tamano_poblacion))
+    
     return poblacion  # Devuelve la población inicial
 
-def cruce(padre1: str, padre2: str):
+def recombinacion(padre1: str, padre2: str):
     """
     Realiza el cruce entre dos individuos (padre1 y padre2) para generar un nuevo individuo (hijo).
     """
@@ -76,6 +78,56 @@ def mutacion(individuo: str, tasa_mutacion: float):
         if random.random() < tasa_mutacion:
             individuo_mutado[i] = '1' if individuo_mutado[i] == '0' else '0'
     return ''.join(individuo_mutado)
+
+def algoritmogenetico(peliculas, tamaño_dvd, restricciones_genero, tamano_poblacion, Ngeneraciones, tasa_mutacion):
+    """
+    Ejecuta el proceso de evolución durante varias generaciones, optimizando los individuos para ajustarse mejor al tamaño de DVD.
+    """
+    # Generar la población inicial
+    poblacion = poblacionInicial(tamano_poblacion)
+    
+    for generacion in range(Ngeneraciones):
+        # Evaluar la aptitud de cada individuo
+        aptitudes = [fitness(peliculas, individuo, tamaño_dvd, restricciones_genero) for individuo in poblacion]
+        
+        # Seleccionar los mejores individuos para la reproducción
+        seleccionados = [poblacion[i] for i in range(len(poblacion)) if aptitudes[i] > 0]
+        
+        # Generar la nueva población mediante cruce y mutación
+        nueva_poblacion = []
+        while len(nueva_poblacion) < tamano_poblacion:
+            padre1, padre2 = random.sample(seleccionados, 2)
+            hijo = recombinacion(padre1, padre2)
+            hijo_mutado = mutacion(hijo, tasa_mutacion)
+            nueva_poblacion.append(hijo_mutado)
+        
+        poblacion = nueva_poblacion
+    
+    # Evaluar la aptitud de la población final
+    aptitudes_finales = [fitness(peliculas, individuo, tamaño_dvd, restricciones_genero) for individuo in poblacion]
+    
+    # Encontrar el mejor individuo
+    mejor_individuo = poblacion[aptitudes_finales.index(max(aptitudes_finales))]
+    mejor_aptitud = max(aptitudes_finales)
+    peliculasMejorIndividuo = tuple(peliculas[index] for index, i in enumerate(mejor_individuo) if i == "1")
+    return mejor_individuo, mejor_aptitud, peliculasMejorIndividuo
+
+
+tamaño_dvd = 13.3
+restricciones_genero = (("COMEDIA", "TERROR"))
+tamano_poblacion = 200
+generaciones = 60
+tasa_mutacion = 0.1
+
+mejor_individuo, mejor_aptitud, peliculasMejorIndividuo = algoritmogenetico(peliculas, tamaño_dvd, restricciones_genero, tamano_poblacion, generaciones, tasa_mutacion)
+print(f"Mejor individuo: {mejor_individuo}")
+print(f"Mejor aptitud: {mejor_aptitud}")
+print("Películas del mejor individuo:")
+pesoTotal = 0
+for pelicula in peliculasMejorIndividuo:
+    print(pelicula.__str__())
+    pesoTotal += pelicula.pesoGB
+print(f"Total de peso: {pesoTotal}GB")
 
 
 
