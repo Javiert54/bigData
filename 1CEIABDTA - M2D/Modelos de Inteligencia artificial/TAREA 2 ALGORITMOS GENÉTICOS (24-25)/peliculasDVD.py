@@ -121,7 +121,7 @@ tasa_mutacion = 0.1
 
 mejor_individuo, mejor_aptitud, peliculasMejorIndividuo = algoritmogenetico(peliculas, tamaño_dvd, restricciones_genero, tamano_poblacion, generaciones, tasa_mutacion)
 print(f"Mejor individuo: {mejor_individuo}")
-print(f"Peso total: {mejor_aptitud}G")
+print(f"Peso total: {mejor_aptitud}GB")
 print("Películas del mejor individuo:")
 pesoTotal = 0
 for pelicula in peliculasMejorIndividuo:
