@@ -75,15 +75,5 @@ def mutacion(individuo: str, tasa_mutacion: float):
             individuo_mutado[i] = '1' if individuo_mutado[i] == '0' else '0'
     return ''.join(individuo_mutado)
 
-# Ejemplo de uso
-padre1 = "110010"
-padre2 = "101101"
-hijo = cruce(padre1, padre2)
-print(f"Hijo después del cruce: {hijo}")
-
-individuo = "110010"
-individuo_mutado = mutacion(individuo, 0.1)
-print(f"Individuo después de la mutación: {individuo_mutado}")
-
 
 
