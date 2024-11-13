@@ -69,6 +69,7 @@ def recombinacion(padre1: str, padre2: str):
     hijo = padre1[:punto_cruce] + padre2[punto_cruce:]
     return hijo
 
+#Definimos la función de mutación
 def mutacion(individuo: str, tasa_mutacion: float):
     """
     Realiza la mutación de un individuo con una cierta tasa de mutación.
@@ -79,12 +80,15 @@ def mutacion(individuo: str, tasa_mutacion: float):
             individuo_mutado[i] = '1' if individuo_mutado[i] == '0' else '0'
     return ''.join(individuo_mutado)
 
+#Definimos el algoritmo genético
 def algoritmogenetico(peliculas, tamaño_dvd, restricciones_genero, tamano_poblacion, Ngeneraciones, tasa_mutacion):
     """
     Ejecuta el proceso de evolución durante varias generaciones, optimizando los individuos para ajustarse mejor al tamaño de DVD.
     """
     # Generar la población inicial
     poblacion = poblacionInicial(tamano_poblacion)
+    while max([fitness(peliculas, individuo, tamaño_dvd, restricciones_genero) for individuo in poblacion]) ==0: #Si la población inicial no cumple el fitness, generamos otra población
+        poblacion = poblacionInicial(tamano_poblacion)
     
     for generacion in range(Ngeneraciones):
         # Evaluar la aptitud de cada individuo
@@ -98,8 +102,8 @@ def algoritmogenetico(peliculas, tamaño_dvd, restricciones_genero, tamano_pobla
         while len(nueva_poblacion) < tamano_poblacion:
             padre1, padre2 = random.sample(seleccionados, 2)
             hijo = recombinacion(padre1, padre2)
-            hijo_mutado = mutacion(hijo, tasa_mutacion)
-            nueva_poblacion.append(hijo_mutado)
+            hijo = mutacion(hijo, tasa_mutacion)
+            nueva_poblacion.append(hijo)
         
         poblacion = nueva_poblacion
     
@@ -117,7 +121,7 @@ tamaño_dvd = 4.7
 restricciones_genero = (("COMEDIA", "TERROR"))
 tamano_poblacion = 200
 generaciones = 60
-tasa_mutacion = 0.1
+tasa_mutacion = 0.09
 
 mejor_individuo, mejor_aptitud, peliculasMejorIndividuo = algoritmogenetico(peliculas, tamaño_dvd, restricciones_genero, tamano_poblacion, generaciones, tasa_mutacion)
 print(f"Mejor individuo: {mejor_individuo}")
