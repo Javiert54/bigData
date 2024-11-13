@@ -24,6 +24,7 @@ peliculas = (
     Pelicula('15 años y un día', 'SUSPENSE', 2.321)
 )
 
+
 def fitness(peliculas, combinacion: str, tamaño_dvd: float, restricciones_genero: tuple):
     """
     Calcula qué tan adecuado es un "individuo" (una combinación de películas) basado en el tamaño de DVD y restricciones de género. 
