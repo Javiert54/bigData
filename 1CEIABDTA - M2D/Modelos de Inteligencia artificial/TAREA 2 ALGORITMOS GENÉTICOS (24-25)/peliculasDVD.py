@@ -31,7 +31,8 @@ def fitness(peliculas, cromosoma: str, tamaño_dvd: float, restricciones_genero:
     USO: fitness_score = fitness(peliculas, "000001001010", (("COMEDIA", "TERROR")))
     """
     if len(cromosoma) != len(peliculas):
-        return f"ERROR: La longitud de la combinación no coincide con la cantidad de películas. \n Longitud combinación: {len(cromosoma)} Cantidad de películas:  {len(peliculas)}"
+        return f"""ERROR: La longitud de la combinación no coincide con la cantidad de películas. 
+    Longitud combinación: {len(cromosoma)} Cantidad de películas:  {len(peliculas)}"""
     
     tamaño_total = 0
     generos = set()
@@ -131,6 +132,3 @@ pesoTotal = 0
 for pelicula in peliculasMejorIndividuo:
     print(pelicula.__str__())
     pesoTotal += pelicula.pesoGB
-
-
-
