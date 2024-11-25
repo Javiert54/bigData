@@ -12,7 +12,6 @@ class table:
             print(self.MAZE[aux:i])
             aux = i
 
-table(3, 3).__str__() #Enseña el mazo
 
 def preCondiciones(table:table, agentPosition:int, destinationPosition:int):
     PC = [None]*(len(table.MAZE)) #PreCondiciones
@@ -54,4 +53,6 @@ def preCondiciones(table:table, agentPosition:int, destinationPosition:int):
     except:
         return None  #Si ocurre algún error, devolvemos None
                 
-print(preCondiciones(table(3, 3), 2, 5))
+tabla = table(3, 3) #Enseña el mazo
+tabla.__str__()
+print(preCondiciones(tabla, 2, 5))
