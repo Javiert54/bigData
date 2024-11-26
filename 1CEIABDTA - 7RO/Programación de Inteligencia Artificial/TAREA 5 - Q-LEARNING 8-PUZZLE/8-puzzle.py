@@ -1,40 +1,20 @@
 import numpy as np
 import random
 
-class QLearningAgent:
-    def __init__(self, table, alpha=0.1, gamma=0.9, epsilon=0.1):
-        self.table = table
-        self.originalTable = table
-        self.alpha = alpha
-        self.gamma = gamma
-        self.epsilon = epsilon
-        self.q_table = np.zeros((len(table.MAZE), 4))  # 4 posibles acciones: arriba, abajo, izquierda, derecha
+directions = [-3, 1, 3, -1]  # Change in index for each move
+move_names = ["Up", "Right", "Down", "Left"]
 
-    def choose_action(self, state):
-        if random.uniform(0, 1) < self.epsilon:
-            return random.randint(0, 3)  # Acción aleatoria
-        else:
-            return np.argmax(self.q_table[state])  # Mejor acción según la Q-table
-
-    def learn(self, state, action, reward, next_state):
-        predict = self.q_table[state, action]
-        target = reward + self.gamma * np.max(self.q_table[next_state])
-        self.q_table[state, action] += self.alpha * (target - predict)
-
-    def train(self, episodes=1000):
-        for _ in range(episodes):
-            state = self.originalTable
-            done = False
-            while not done:
-                action = self.choose_action(state)
-                next_state, reward, done = self.step(state, action)
-                self.learn(state, action, reward, next_state)
-                state = next_state
-
-
-    def step(self, state, action):
-        # Implementa la lógica para ejecutar una acción y devolver el siguiente estado, la recompensa y si el episodio ha terminado
-        pass
+# Validate if a move is within bounds
+def is_valid_move(index, direction):
+    if direction == -3 and index < 3:  # Up
+        return False
+    if direction == 3 and index > 5:  # Down
+        return False
+    if direction == -1 and index % 3 == 0:  # Left
+        return False
+    if direction == 1 and index % 3 == 2:  # Right
+        return False
+    return True
 
 
 class table:
@@ -92,10 +72,8 @@ def preCondiciones(table:table, agentPosition:int, destinationPosition:int):
     except:
         return None  #Si ocurre algún error, devolvemos None
                 
+
+
 tabla = table(3, 3) #Enseña el mazo
 tabla.__str__()
 print(preCondiciones(tabla, 2, 5))
-# Ejemplo de uso
-tabla = table(3, 3)
-agent = QLearningAgent(tabla)
-agent.train()
