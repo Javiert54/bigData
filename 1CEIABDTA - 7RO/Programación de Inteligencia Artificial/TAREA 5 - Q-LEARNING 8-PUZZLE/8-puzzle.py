@@ -21,10 +21,8 @@ class table:
     def __init__(self, y, x):
         self.y = y
         self.x = x
-        self.MAZE = []
-        self.MAZE = [0] * (self.y * self.x)
-        # self.MAZE[6] = 1
-        # self.MAZE[8] = 1
+        self.MAZE = [str(i+1) for i in range((self.y * self.x)-1)]
+        self.MAZE.append(" ")
     def __str__(self):
         aux = 0
         for i in range(self.x, (self.y+1)*self.x, self.x):
@@ -72,7 +70,45 @@ def preCondiciones(table:table, agentPosition:int, destinationPosition:int):
     except:
         return None  #Si ocurre algún error, devolvemos None
                 
+# Swap two positions in a state
+def swap(state, i, j):
+    state = list(state)
+    state[i], state[j] = state[j], state[i]
+    return ''.join(state)
 
+# Generate transitions for the 8-puzzle
+def generate_transitions_8_puzzle(initial_state):   #  POR REVISAR !!!!
+    visited = set()
+    queue = deque([initial_state])
+    transitions = {}
+
+    while queue:
+        current_state = queue.popleft()
+        if current_state in visited:
+            continue
+        visited.add(current_state)
+
+        empty_index = current_state.index('9')
+        state_transitions = []
+
+        for direction in directions:
+            if is_valid_move(empty_index, direction):
+                new_state = swap(current_state, empty_index, empty_index + direction)
+                state_transitions.append(new_state)
+                if new_state not in visited:
+                    queue.append(new_state)
+            else:
+                state_transitions.append(None)  # Invalid move
+
+        transitions[current_state] = state_transitions
+
+    return transitions
+
+# Initial state of the puzzle
+initial_state = "123456789"
+
+# Generate the transitions
+transitions = generate_transitions_8_puzzle(initial_state)
 
 tabla = table(3, 3) #Enseña el mazo
 tabla.__str__()
