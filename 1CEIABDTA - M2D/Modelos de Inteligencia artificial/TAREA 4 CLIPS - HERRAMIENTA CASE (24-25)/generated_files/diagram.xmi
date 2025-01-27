@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+  <XMI xmi.version="2.1" xmlns:xmi="http://schema.omg.org/spec/XMI/2.1" xmlns:uml="http://www.omg.org/spec/UML/20090901">
+  <uml:Model xmi:type="uml:Model" name="UMLModel">
+    <packagedElement xmi:type="uml:Class" name="ClaseMadre">
+      <ownedAttribute visibility="+" name="Color" type="string" />
+      <ownedOperation visibility="+" name="Correr" type="int" />
+    </packagedElement>
+    <packagedElement xmi:type="uml:Class" name="ClaseHijo">
+      <ownedAttribute visibility="+" name="Color" type="string" />
+      <ownedOperation visibility="+" name="Correr" type="int" />
+    </packagedElement>
+    <packagedElement xmi:type="uml:Generalization" memberEnd="ClaseMadre ClaseHijo">
+    </packagedElement>
+  </uml:Model>
+</XMI>
