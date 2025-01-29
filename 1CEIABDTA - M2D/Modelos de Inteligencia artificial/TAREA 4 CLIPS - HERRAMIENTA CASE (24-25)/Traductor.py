@@ -366,7 +366,7 @@ def ejecutar_clips(clp_path):
 
 if __name__ == '__main__':
     # Ruta del archivo XMI
-    xmi_path = 'diagram.xmi'
+    xmi_path = 'process-diagram/diagram.xmi'
     # Ruta del archivo de salida CLIPS
     clips_file = 'output.clp'
 

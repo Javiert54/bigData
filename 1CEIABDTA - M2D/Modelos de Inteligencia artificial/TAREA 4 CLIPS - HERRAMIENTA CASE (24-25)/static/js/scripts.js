@@ -579,3 +579,38 @@ function downloadXMI() {
 	a.click();
 	document.body.removeChild(a);
 }
+
+async function saveXMIToServer() {
+    const xmi = generateXMI();
+    const blob = new Blob([xmi], { type: 'application/xml' });
+    const formData = new FormData();
+    formData.append('file', blob, 'diagram.xmi');
+
+    try {
+        const response = await fetch('/generated_files', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (response.ok) {
+            console.log('XMI file saved successfully');
+            // After saving the file, trigger the processing
+            const processResponse = await fetch('/process-diagram', {
+                method: 'POST'
+            });
+
+            const result = await processResponse.json();
+            const statusDiv = document.getElementById('status');
+
+            if (processResponse.ok) {
+                statusDiv.innerHTML = `<p style="color: green;">${result.message}</p>`;
+            } else {
+                statusDiv.innerHTML = `<p style="color: red;">Error: ${result.error}</p>`;
+            }
+        } else {
+            console.error('Error saving XMI file:', response.statusText);
+        }
+    } catch (error) {
+        console.error('Error saving XMI file:', error);
+    }
+}

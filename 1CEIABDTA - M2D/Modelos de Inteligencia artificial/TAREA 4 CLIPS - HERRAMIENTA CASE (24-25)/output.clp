@@ -39,13 +39,7 @@
    (slot part)
    (slot multiplicity))
 (deffacts initial-facts
-  (attribute (id attr1) (class-name ClaseMadre) (name Color) (visibility public) (type "string"))
-  (operation (id op1) (class-name ClaseMadre) (name Correr) (visibility public) (type "int"))
-  (class (name ClaseMadre) (attributes attr1) (operations op1))
-  (attribute (id attr2) (class-name ClaseHijo) (name Color) (visibility public) (type "string"))
-  (operation (id op2) (class-name ClaseHijo) (name Correr) (visibility public) (type "int"))
-  (class (name ClaseHijo) (attributes attr2) (operations op2))
-  (generalization (parent ClaseMadre) (child ClaseHijo))
+  (class (name ClaseHijo) (attributes ) (operations ))
 )
 
 (defrule generate-java-code
