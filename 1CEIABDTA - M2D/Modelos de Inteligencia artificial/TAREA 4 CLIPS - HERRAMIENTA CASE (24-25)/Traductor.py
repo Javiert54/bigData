@@ -368,7 +368,7 @@ if __name__ == '__main__':
     # Ruta del archivo XMI
     xmi_path = 'process-diagram/diagram.xmi'
     # Ruta del archivo de salida CLIPS
-    clips_file = 'output.clp'
+    clips_file = 'generated_files/output.clp'
 
     try:
         root = parse_xmi(xmi_path)

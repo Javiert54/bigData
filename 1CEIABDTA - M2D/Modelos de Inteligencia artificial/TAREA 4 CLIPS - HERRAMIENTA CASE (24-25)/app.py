@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_from_directory
 import subprocess
 import os
 
@@ -22,7 +22,7 @@ def process_diagram():
         subprocess.run(['python', 'Traductor.py'], check=True)
 
         # Confirmar éxito
-        return jsonify({'message': 'Archivo procesado correctamente'}), 200
+        return jsonify({'message': 'Archivo generado correctamente'}), 200
 
     except subprocess.CalledProcessError as e:
         app.logger.error(f'Error al ejecutar Traductor.py: {e}')
@@ -42,3 +42,14 @@ def upload_file():
     if file:
         file.save(os.path.join('process-diagram', 'diagram.xmi'))
         return jsonify({'message': 'File uploaded successfully'}), 200
+
+# Ruta para servir el archivo output.clp
+@app.route('/generated_files/output.clp', methods=['GET'])
+def get_output_clp():
+    try:
+        return send_from_directory('generated_files', 'output.clp')
+    except FileNotFoundError:
+        return jsonify({'error': 'Archivo output.clp no encontrado'}), 404
+
+if __name__ == '__main__':
+    app.run(debug=True)
