@@ -39,9 +39,14 @@
    (slot part)
    (slot multiplicity))
 (deffacts initial-facts
-  (attribute (id attr1) (class-name ClaseHijossL) (name gg) (visibility public) (type "string"))
-  (operation (id op1) (class-name ClaseHijossL) (name Correr) (visibility public) (type "int"))
-  (class (name ClaseHijossL) (attributes attr1) (operations op1))
+  (attribute (id attr1) (class-name ClaseHijossLss) (name gg) (visibility public) (type "string"))
+  (operation (id op1) (class-name ClaseHijossLss) (name Correr) (visibility public) (type "int"))
+  (class (name ClaseHijossLss) (attributes attr1) (operations op1))
+  (attribute (id attr2) (class-name pepe) (name gg) (visibility public) (type "string"))
+  (attribute (id attr3) (class-name pepe) (name clasehijosslssList1) (visibility private) (type "HashSet<ClaseHijossLss>"))
+  (operation (id op2) (class-name pepe) (name Correr) (visibility public) (type "int"))
+  (class (name pepe) (attributes attr2 attr3) (operations op2))
+  (directedAssociation (source pepe) (target ClaseHijossLss) (multiplicity1 1) (multiplicity2 *))
 )
 
 (defrule generate-java-code

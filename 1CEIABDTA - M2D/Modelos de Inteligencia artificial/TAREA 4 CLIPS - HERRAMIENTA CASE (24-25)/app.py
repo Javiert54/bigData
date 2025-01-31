@@ -19,10 +19,12 @@ def process_diagram():
             return jsonify({'error': 'Archivo diagram.xmi no encontrado'}), 400
 
         # Ejecutar Traductor.py
-        subprocess.run(['python', 'Traductor.py'], check=True)
+        # Capturar la salida estándar
+        result = subprocess.run(['python', 'Traductor.py'], check=True, capture_output=True, text=True)
+        output = result.stdout
 
         # Confirmar éxito
-        return jsonify({'message': 'Archivo generado correctamente'}), 200
+        return jsonify({'message': 'Archivo generado correctamente', "output":output}), 200
 
     except subprocess.CalledProcessError as e:
         app.logger.error(f'Error al ejecutar Traductor.py: {e}')

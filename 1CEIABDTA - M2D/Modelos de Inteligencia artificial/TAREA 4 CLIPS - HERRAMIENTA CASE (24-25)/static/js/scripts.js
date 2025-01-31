@@ -622,7 +622,8 @@ async function saveXMIToServer() {
             const statusDiv = document.getElementById('status');
 
             if (processResponse.ok) {
-                statusDiv.innerHTML = `<p style="color: green;">${result.message}</p>`;
+                statusDiv.innerHTML = `<p style="color: green;">${result.message}</p><textarea>${result.output}</textarea>`;
+
             } else {
                 statusDiv.innerHTML = `<p style="color: red;">Error: ${result.error}</p>`;
             }

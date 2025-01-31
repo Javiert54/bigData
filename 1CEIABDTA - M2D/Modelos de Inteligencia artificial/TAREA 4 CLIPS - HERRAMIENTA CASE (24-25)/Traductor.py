@@ -4,7 +4,7 @@ from clips import Environment
 def parse_xmi(file_path):
     tree = ET.parse(file_path)
     root = tree.getroot()
-    print(f"Root element: {root.tag}")
+    # print(f"Root element: {root.tag}")
     return root
 
 def extract_classes(root):
@@ -362,7 +362,11 @@ def write_clips_file(clips_facts, file_path):
 def ejecutar_clips(clp_path):
     env = Environment()
     env.load(clp_path)
+    env.reset()
     env.run()
+
+
+    
 
 if __name__ == '__main__':
     # Ruta del archivo XMI
@@ -384,10 +388,9 @@ if __name__ == '__main__':
      
         clips_facts = generate_clips_facts(classes, relationships)
         write_clips_file(clips_facts, clips_file)
-        print("Archivo CLIPS generado correctamente.")
         
         # Ejecutar CLIPS para generar el código Java
         ejecutar_clips(clips_file)
-        print("Código Java generado correctamente.")
+
     except ET.ParseError as e:
         print(f"Error al parsear el archivo XMI: {e}")
