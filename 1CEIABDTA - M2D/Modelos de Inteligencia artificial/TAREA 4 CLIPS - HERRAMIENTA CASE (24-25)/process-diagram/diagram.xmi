@@ -2,7 +2,7 @@
   <XMI xmi.version="2.1" xmlns:xmi="http://schema.omg.org/spec/XMI/2.1" xmlns:uml="http://www.omg.org/spec/UML/20090901">
   <uml:Model xmi:type="uml:Model" name="UMLModel">
     <packagedElement xmi:type="uml:Class" name="ClaseHijossL">
-      <ownedAttribute visibility="+" name="" type="string" />
+      <ownedAttribute visibility="+" name="gg" type="string" />
       <ownedOperation visibility="+" name="Correr" type="int" />
     </packagedElement>
   </uml:Model>

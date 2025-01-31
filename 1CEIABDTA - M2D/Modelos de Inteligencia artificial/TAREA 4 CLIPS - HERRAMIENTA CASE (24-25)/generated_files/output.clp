@@ -39,7 +39,7 @@
    (slot part)
    (slot multiplicity))
 (deffacts initial-facts
-  (attribute (id attr1) (class-name ClaseHijossL) (name ) (visibility public) (type "string"))
+  (attribute (id attr1) (class-name ClaseHijossL) (name gg) (visibility public) (type "string"))
   (operation (id op1) (class-name ClaseHijossL) (name Correr) (visibility public) (type "int"))
   (class (name ClaseHijossL) (attributes attr1) (operations op1))
 )
