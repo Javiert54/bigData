@@ -635,4 +635,3 @@ async function saveXMIToServer() {
     }
     downloadGeneratedFile();
 }
-

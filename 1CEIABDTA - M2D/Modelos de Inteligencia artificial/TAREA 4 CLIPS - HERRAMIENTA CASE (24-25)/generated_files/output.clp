@@ -39,10 +39,10 @@
    (slot part)
    (slot multiplicity))
 (deffacts initial-facts
-  (attribute (id attr1) (class-name pepewww) (name pepeList) (visibility private) (type "ArrayList<pepe>"))
-  (class (name pepewww) (attributes attr1) (operations ))
-  (class (name pepe) (attributes ) (operations ))
-  (composition (whole pepewww) (part pepe) (multiplicity None))
+  (attribute (id attr1) (class-name pepa) (name gg) (visibility public) (type "string"))
+  (operation (id op1) (class-name pepa) (name Correr) (visibility public) (type "int"))
+  (operation (id op2) (class-name pepa) (name Correr) (visibility public) (type "intkk"))
+  (class (name pepa) (attributes attr1) (operations op1 op2))
 )
 
 (defrule generate-java-code
