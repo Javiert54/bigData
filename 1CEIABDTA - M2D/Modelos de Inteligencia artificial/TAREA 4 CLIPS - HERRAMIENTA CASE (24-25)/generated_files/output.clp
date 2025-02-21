@@ -39,10 +39,12 @@
    (slot part)
    (slot multiplicity))
 (deffacts initial-facts
-  (attribute (id attr1) (class-name pepa) (name gg) (visibility public) (type "string"))
-  (operation (id op1) (class-name pepa) (name Correr) (visibility public) (type "int"))
-  (operation (id op2) (class-name pepa) (name Correr) (visibility public) (type "intkk"))
-  (class (name pepa) (attributes attr1) (operations op1 op2))
+  (class (name pepe) (attributes ) (operations ))
+  (class (name pepe2) (attributes ) (operations ))
+  (class (name pepe3) (attributes ) (operations ))
+  (generalization (parent pepe) (child pepe2))
+  (generalization (parent pepe2) (child pepe3))
+  (association (source pepe2) (target pepe3) (multiplicity1 None) (multiplicity2 None))
 )
 
 (defrule generate-java-code
