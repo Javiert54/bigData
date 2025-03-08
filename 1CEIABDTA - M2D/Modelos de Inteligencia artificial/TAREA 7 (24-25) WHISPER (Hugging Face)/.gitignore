@@ -1,2 +1,5 @@
 # Ignoring the OpenAI directory
 /openai/
+/ffmpeg/
+ffmpeg.exe
+ffprobe.exe
