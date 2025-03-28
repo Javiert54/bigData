@@ -6,10 +6,10 @@ import matplotlib.pyplot as plt
 env = gym.make('MountainCarContinuous-v0')
 
 # Parameters
-episodes = 3000
-timesteps = 200
-learning_rate = 0.2
-discount_factor = 0.99
+episodes = 1000
+timesteps = 20
+learning_rate = 0.01
+discount_factor = 2
 
 # Discretize the state space
 state_bins = [20, 20]  # Number of bins for each state dimension
@@ -34,7 +34,7 @@ def choose_action(state):
 rewards = []
 for episode in range(episodes):
     state = discretize_state(env.reset()[0])  # Discretize the initial state
-    print(f"pos: {float(state[0]):.2f}, vel: {float(state[1]):.2f}")
+    print(f"pos: {float(state[0])}, vel: {float(state[1])}")
     total_reward = 0
     for t in range(timesteps):
         action = choose_action(state)
