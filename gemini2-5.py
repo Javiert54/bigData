@@ -1,7 +1,11 @@
 from google import genai
 from google.genai import types
 from IPython.display import Image, Markdown, Code, HTML, display
+<<<<<<< HEAD
 
+=======
+import atexit
+>>>>>>> 31c3c6a (Add gemini2-5.py for content generation using Gemini API and update .gitignore)
 
 with open("geminiAPI-key.txt") as f:
     api_key = f.read().strip()
@@ -10,6 +14,7 @@ client = genai.Client(api_key=api_key)
 
 MODEL_ID = "gemini-2.5-pro-exp-03-25"
 
+<<<<<<< HEAD
 system_instruction = """
   You are an expert software developer and a helpful coding assistant.
   You are able to generate high-quality code in any programming language.
@@ -20,6 +25,14 @@ chat = client.models.generate_content(
     config=types.GenerateContentConfig(
         tools=[types.Tool(
             code_execution=types.ToolCodeExecution()
+=======
+response = client.models.generate_content(
+    model="gemini-2.0-flash",
+    contents=input("Enter your prompt: "),
+    config=types.GenerateContentConfig(
+        tools=[types.Tool(
+            code_execution=types.ToolCodeExecution
+>>>>>>> 31c3c6a (Add gemini2-5.py for content generation using Gemini API and update .gitignore)
         )]
     )
 )
@@ -43,6 +56,7 @@ def display_code_execution_result(response):
             display(Image(data=part.inline_data.data, width=800, format="png"))
         display(Markdown("---"))
 
+<<<<<<< HEAD
 
 while True:
     user_input = input("\nUser Input: ")
@@ -51,3 +65,6 @@ while True:
 
     response = chat.send_message(user_input)
     display_code_execution_result(response)
+=======
+display_code_execution_result(response)
+>>>>>>> 31c3c6a (Add gemini2-5.py for content generation using Gemini API and update .gitignore)
