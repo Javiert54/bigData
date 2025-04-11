@@ -36,7 +36,7 @@ VELOCITY_PENALTY_SENSITIVITY: float = 1100.0 # Sensibilidad a la velocidad (cerc
 # Parámetros de Discretización
 STATE_BINS_COUNT: Tuple[int, int] = (20, 20) # (posición, velocidad)
 NUM_ACTIONS: int = 5
-ACTION_MAP: List[float] = [-1.0, -0.5, 0.0, 0.5, 1.0]
+ACTION_MAP: List[float] = [-0.7, -0.5, 0.0, 0.5, 0.7]
 
 
 # --- Parámetros de Grabación de Vídeo ---
