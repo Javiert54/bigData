@@ -2,438 +2,446 @@ import os
 import gym
 import numpy as np
 import matplotlib
-matplotlib.use('TkAgg') # O prueba 'Qt5Agg' si TkAgg no funciona
+matplotlib.use('TkAgg') # O Qt5Agg si no va TkAgg
 import matplotlib.pyplot as plt
 from gym.wrappers import RecordVideo
 from pathlib import Path
-from typing import Tuple, List, Any, Dict, Optional
-import traceback # Importar para stack trace
-import math # Para la función exponencial
+import traceback
+import math
 
 # --- Configuración ---
-ENV_NAME: str = 'MountainCarContinuous-v0'
-VIDEO_FOLDER: Path = Path('videos') # Carpeta para vídeos
+ENV_NAME = 'MountainCarContinuous-v0'
+VIDEO_FOLDER = Path('videos') # Carpeta para vídeos
 
-# Parámetros de Entrenamiento
-EPISODES: int = 6000
-MAX_TIMESTEPS_PER_EPISODE: int = 900
-LEARNING_RATE: float = 0.15 # Alpha
-DISCOUNT_FACTOR: float = 0.99 # Gamma
-INITIAL_EPSILON: float = 1.0
-EPSILON_DECAY: float = 0.9994
-MIN_EPSILON: float = 0.05
-STEP_PENALTY: float = 0.0000 # Penalización base por cada paso
-STRONG_ACTION_REWARD_FACTOR: float = 0.1 # Recompensa por acciones fuertes
+# Parámetros del Training
+EPISODES = 6000
+MAX_STEPS = 900 # Máximos pasos por juego
+LR = 0.15 # Learning Rate (Alpha)
+GAMMA = 0.99 # Discount Factor
+EPSILON = 1.0 # Empezar explorando mucho
+EPSILON_DECAY = 0.9994 
+MIN_EPSILON = 0.05 # Mínimo de exploración
+STEP_PENALTY = 0.0 # Castigo por cada paso
+STRONG_ACTION_REWARD = 0.02 
 
-# --- PARÁMETROS PARA PENALIZACIÓN CONTINUA POR LENTITUD EN EL FONDO ---
-BOTTOM_CENTER_POS: float = -0.5  # Posición central del fondo del valle
-MAX_BOTTOM_SLOW_PENALTY: float = 1 # Penalización MÁXIMA (en el fondo y parado)
-# Sensibilidad: valores más altos -> la penalización disminuye más rápido al alejarse/acelerar
-POSITION_PENALTY_SENSITIVITY: float = 60.0 # Sensibilidad a la distancia del fondo
-VELOCITY_PENALTY_SENSITIVITY: float = 1100.0 # Sensibilidad a la velocidad (cercanía a cero)
+# --- Castigo por estar quieto cerca del fondo ---
+BOTTOM_POS = -0.5  # Dónde está el valle
+MAX_PENALTY_BOTTOM = 1 # Castigo MAX si estás abajo y quieto
+POS_SENSITIVITY = 60.0 # Sensibilidad a la posición
+VEL_SENSITIVITY = 1100.0 # Sensibilidad a la velocidad (si es casi 0)
 
+# Discretizar el estado
+NUM_BINS = (10, 10) # Cajas para (posición, velocidad)
 
-# Parámetros de Discretización
-STATE_BINS_COUNT: Tuple[int, int] = (20, 20) # (posición, velocidad)
-NUM_ACTIONS: int = 5
-ACTION_MAP: List[float] = [-0.7, -0.5, 0.0, 0.5, 0.7]
+ACTIONS = [-0.7, -0.5 -0.3, 0.0, 0.3, 0.5, 0.7] # Qué fuerza aplicamos en cada acción
+NUM_ACTIONS = len(ACTIONS) # Cuántas acciones podemos hacer
+# --- Para grabar vídeos ---
+RECORD_START = 0
+RECORD_END = EPISODES
+RECORD_EVERY = 500 # Grabar el mejor de cada X episodios
 
-
-# --- Parámetros de Grabación de Vídeo ---
-RECORD_START_EPISODE: int = 0
-RECORD_END_EPISODE: int = EPISODES
-RECORD_CHUNK_SIZE: int = 500
-
-# --- Parámetros de Graficación ---
-PLOT_START_EPISODE: int = RECORD_START_EPISODE
-PLOT_END_EPISODE: int = RECORD_END_EPISODE
-MOVING_AVG_WINDOW: int = 50
-PLOT_FILENAME_PREFIX: str = "mountaincar_rewards_best_chunk"
+# --- Para la gráfica ---
+PLOT_START = RECORD_START
+PLOT_END = RECORD_END
+AVG_WINDOW = 50 # Para suavizar la gráfica
+PLOT_NAME = "grafica_recompensas_montaña"
 # ---------------------
 
-def setup_environment_and_discretization(
-    env_name: str,
-    state_bins_count: Tuple[int, int],
-    render_mode: str = 'rgb_array'
-) -> Tuple[gym.Env, List[np.ndarray]]:
-    """Crea el entorno y calcula los contenedores para la discretización del estado."""
-    env = gym.make(env_name, render_mode=render_mode)
-    state_space_low = env.observation_space.low
-    state_space_high = env.observation_space.high
-    adjusted_high = state_space_high + 1e-6
-    state_bins = [
-        np.linspace(state_space_low[i], adjusted_high[i], num=state_bins_count[i] + 1)[1:-1]
-        for i in range(env.observation_space.shape[0])
-    ]
-    print("Límites del espacio de estados:", state_space_low, state_space_high)
-    print("Contenedores de discretización (bordes internos):")
-    for i, bins in enumerate(state_bins):
-        print(f"  Dimensión {i}: {len(bins)+1} contenedores")
+
+def preparar_entorno(env_name, num_bins):
+    """Crea el entorno y calcula las divisiones para el estado."""
+    env = gym.make(env_name, render_mode='rgb_array') # 'rgb_array' para poder grabar
+    low = env.observation_space.low
+    high = env.observation_space.high
+    
+    # Añadimos un poquito al límite alto para que np.linspace funcione bien
+    high_adj = high + 1e-6 
+    
+    # Calculamos los bordes de las cajas para cada dimensión (pos, vel)
+    state_bins = []
+    for i in range(env.observation_space.shape[0]):
+        # linspace crea puntos equidistantes, [1:-1] quita el primero y el último (los bordes exteriores)
+        bins = np.linspace(low[i], high_adj[i], num=num_bins[i] + 1)[1:-1]
+        state_bins.append(bins)
+        
+    print("Límites del estado:", low, high)
+    print("Divisiones para discretizar (bordes internos):")
+    for i, b in enumerate(state_bins):
+        print(f"  Dimensión {i}: {len(b)+1} cajas")
     return env, state_bins
 
-def initialize_q_table(state_bins_count: Tuple[int, int], num_actions: int) -> np.ndarray:
+# Función para crear la tabla Q (donde guardamos lo que aprende)
+def crear_q_table(num_bins, num_actions):
     """Inicializa la tabla Q con ceros."""
-    q_table_shape = state_bins_count + (num_actions,)
-    q_table = np.zeros(q_table_shape, dtype=np.float32)
-    print(f"Tabla Q inicializada con forma: {q_table.shape}")
+    q_table_size = num_bins + (num_actions,) # Tamaño: (cajas_pos, cajas_vel, num_acciones)
+    q_table = np.zeros(q_table_size) 
+    print(f"Tabla Q creada con tamaño: {q_table.shape}")
     return q_table
 
-def discretize_state(state: np.ndarray, state_bins: List[np.ndarray]) -> Tuple[int, ...]:
-    """Discretiza un estado continuo en un índice de tupla discreto."""
-    state_idx = tuple(int(np.digitize(state[i], bins)) for i, bins in enumerate(state_bins))
-    state_idx = tuple(np.clip(idx, 0, count - 1) for idx, count in zip(state_idx, STATE_BINS_COUNT))
-    return state_idx
+# Función para convertir el estado (pos, vel) a índices de la tabla Q
+def discretizar_estado(estado, state_bins):
+    """Convierte un estado continuo a una tupla de índices (caja_pos, caja_vel)."""
+    indices = []
+    for i in range(len(estado)):
+        # digitize nos dice en qué caja cae el valor
+        idx = int(np.digitize(estado[i], state_bins[i]))
+        indices.append(idx)
+    
+    # Asegurarnos de que los índices no se salgan de la tabla (por si acaso)
+    indices_clipped = []
+    for i in range(len(indices)):
+        # clip limita el valor entre 0 y num_bins[i]-1
+        clipped_idx = np.clip(indices[i], 0, NUM_BINS[i] - 1) 
+        indices_clipped.append(clipped_idx)
+        
+    return tuple(indices_clipped)
 
-def choose_action(
-    state_idx: Tuple[int, ...],
-    q_table: np.ndarray,
-    current_epsilon: float,
-    num_actions: int
-) -> int:
-    """Elige una acción usando la política epsilon-greedy."""
-    if np.random.random() < current_epsilon:
-        action_idx = np.random.randint(0, num_actions)
+# Función para decidir qué acción tomar
+def elegir_accion(estado_idx, q_table, epsilon, num_actions):
+    """Elige acción: a veces al azar (explorar), a veces la mejor (explotar)."""
+    # Política epsilon-greedy
+    if np.random.random() < epsilon:
+        # Explorar: elige una acción al azar
+        accion_idx = np.random.randint(0, num_actions)
     else:
-        action_idx = np.argmax(q_table[state_idx])
-    return action_idx
+        # Explotar: elige la mejor acción según la tabla Q para este estado
+        accion_idx = np.argmax(q_table[estado_idx])
+    return accion_idx
 
-def run_and_record_episode(
-    base_env: gym.Env,
-    q_table: np.ndarray,
-    state_bins: List[np.ndarray],
-    action_map: List[float],
-    num_actions: int,
-    max_timesteps: int,
-    video_folder: Path,
-    episode_to_record: int,
-    episode_reward: float
-) -> None:
-    """Ejecuta un episodio con epsilon=0 (explotación) y lo graba."""
-    active_env = base_env
-    reward_str = f"reward_{episode_reward:.2f}".replace('.', '_')
-    print(f"--- Grabando episodio {episode_to_record} (Recompensa: {episode_reward:.2f})... ---")
+# Función para jugar un episodio y grabarlo si es el mejor
+def jugar_y_grabar(env, q_table, state_bins, actions, num_actions, max_steps, video_folder, ep, reward):
+    """Juega un episodio usando solo lo aprendido (sin explorar) y lo graba."""
+    
+    # Preparamos el nombre del vídeo
+    reward_str = f"reward_{reward:.2f}".replace('.', '_') 
+    filename = f"mountaincar-mejor-ep{ep}-{reward_str}"
+    print(f"--- Grabando episodio {ep} (Recompensa: {reward:.2f})... ---")
+    
+    # Envolvemos el entorno con RecordVideo
     try:
-        active_env = RecordVideo(
-            base_env,
-            str(video_folder),
-            episode_trigger=lambda e: True,
-            name_prefix=f"mountaincar-best-ep{episode_to_record}-{reward_str}"
-        )
-        active_env.render()
-        try:
-            initial_observation, info = active_env.reset()
-        except Exception as e:
-             print(f"Error al resetear el entorno para grabar episodio {episode_to_record}: {e}")
-             try: active_env.close()
-             except Exception: pass
-             return
-
-        state = discretize_state(initial_observation, state_bins)
-        terminated = False
-        truncated = False
-        current_step = 0
-        for step in range(max_timesteps):
-            action_idx = np.argmax(q_table[state])
-            continuous_action = np.array([action_map[action_idx]], dtype=np.float32)
+        # Usamos lambda e: True para grabar este episodio específico
+        record_env = RecordVideo(env, str(video_folder), episode_trigger=lambda e: True, name_prefix=filename)
+        record_env.render() # Necesario para que grabe algo
+        
+        # Empezamos el episodio
+        obs, _ = record_env.reset()
+        estado = discretizar_estado(obs, state_bins)
+        terminado = False
+        truncado = False # Para gym > 0.26
+        pasos = 0
+        
+        # Bucle del episodio (solo explotación)
+        for t in range(max_steps):
+            accion_idx = np.argmax(q_table[estado]) # Elegir la mejor acción
+            accion_continua = np.array([actions[accion_idx]], dtype=np.float32)
+            
+            # Ejecutar la acción
             try:
-                next_observation, reward, terminated, truncated, _ = active_env.step(continuous_action)
+                obs_siguiente, rec, terminado, truncado, _ = record_env.step(accion_continua)
             except Exception as e:
-                print(f"Error durante env.step al grabar episodio {episode_to_record}, paso {step}: {e}")
-                terminated = True
-            next_state = discretize_state(next_observation, state_bins)
-            state = next_state
-            current_step = step + 1
-            if terminated or truncated: break
-        print(f"--- Grabación del episodio {episode_to_record} finalizada (Duración: {current_step} pasos). ---")
+                print(f"Error en step grabando ep {ep}, paso {t}: {e}")
+                terminado = True # Salir si hay error
+                
+            estado_siguiente = discretizar_estado(obs_siguiente, state_bins)
+            estado = estado_siguiente
+            pasos = t + 1
+            
+            if terminado or truncado:
+                break
+                
+        print(f"--- Grabación ep {ep} terminada ({pasos} pasos). ---")
+        
     except Exception as e:
-        print(f"Error general al inicializar o ejecutar RecordVideo para episodio {episode_to_record}: {e}")
+        print(f"Error al preparar o grabar el vídeo del episodio {ep}: {e}")
         traceback.print_exc()
     finally:
-        if isinstance(active_env, RecordVideo):
-             try: active_env.close()
+        # Importante cerrar el entorno de grabación para que guarde el vídeo
+        if 'record_env' in locals() and isinstance(record_env, RecordVideo):
+             try:
+                 record_env.close()
              except Exception as e:
-                 print(f"Error al cerrar RecordVideo para episodio {episode_to_record}: {e}")
-                 traceback.print_exc()
+                 print(f"Error cerrando RecordVideo para ep {ep}: {e}")
 
-def train_agent(
-    base_env: gym.Env,
-    q_table: np.ndarray,
-    state_bins: List[np.ndarray],
-    action_map: List[float],
-    num_actions: int,
-    episodes: int,
-    max_timesteps: int,
-    learning_rate: float,
-    discount_factor: float,
-    initial_epsilon: float,
-    epsilon_decay: float,
-    min_epsilon: float,
-    step_penalty: float,
-    strong_action_reward_factor: float,
-    bottom_center_pos: float,             # <-- Nuevo parámetro
-    max_bottom_slow_penalty: float,       # <-- Nuevo parámetro
-    position_penalty_sensitivity: float,  # <-- Nuevo parámetro
-    velocity_penalty_sensitivity: float,  # <-- Nuevo parámetro
-    video_folder: Path,
-    record_start_episode: int,
-    record_end_episode: int,
-    record_chunk_size: int
-) -> List[float]:
-    """Ejecuta el bucle de entrenamiento Q-learning, grabando el mejor episodio por chunk."""
-    rewards_per_episode: List[float] = []
-    epsilon = initial_epsilon
-    best_reward_in_chunk: float = -np.inf
-    best_episode_in_chunk: int = -1
-    current_chunk_episode_count: int = 0
+# Función principal de entrenamiento
+def entrenar(env, q_table, state_bins, actions, num_actions, episodes, max_steps, 
+             lr, gamma, start_epsilon, eps_decay, min_epsilon, 
+             step_penalty, strong_action_reward,
+             bottom_pos, max_penalty_bottom, pos_sensitivity, vel_sensitivity, # Params nuevos
+             video_folder, record_start, record_end, record_every):
+    """Bucle principal de Q-learning."""
+    
+    todas_recompensas = [] # Lista para guardar recompensa de cada episodio
+    epsilon = start_epsilon
+    
+    # Para grabar el mejor de cada "chunk" (grupo) de episodios
+    mejor_recompensa_chunk = -np.inf
+    mejor_episodio_chunk = -1
+    episodios_en_chunk = 0
+    
+    # Crear carpeta de vídeos si no existe
     video_folder.mkdir(parents=True, exist_ok=True)
 
-    print(f"\n--- Iniciando Entrenamiento ---")
-    print(f"Penalización por paso: {step_penalty}")
-    print(f"Recompensa por acción fuerte (factor): {strong_action_reward_factor}")
-    # Informar nueva penalización continua
-    print(f"Penalización continua por lentitud cerca del fondo (max): {max_bottom_slow_penalty}")
-    print(f"  Sensibilidad Posición: {position_penalty_sensitivity}, Velocidad: {velocity_penalty_sensitivity}")
-    print(f"Grabación configurada para el mejor episodio cada {record_chunk_size} episodios,")
-    print(f"considerando episodios desde {record_start_episode} hasta {record_end_episode}.")
+    print(f"\n--- Empezando Entrenamiento ---")
+    print(f"Castigo por paso: {step_penalty}")
+    print(f"Premio acción fuerte: {strong_action_reward}")
+    print(f"Castigo por lento abajo (max): {max_penalty_bottom}")
+    print(f"  Sensibilidad Pos: {pos_sensitivity}, Vel: {vel_sensitivity}")
+    print(f"Grabando el mejor episodio cada {record_every} episodios ({record_start}-{record_end}).")
 
-    for episode in range(episodes):
-        episode_num_user = episode + 1
+    # Bucle principal de episodios
+    for ep in range(episodes):
+        ep_num = ep + 1 # Para que empiece en 1
+        
+        # Reiniciar el entorno para un nuevo episodio
         try:
-            initial_observation, info = base_env.reset()
+            obs, _ = env.reset()
         except Exception as e:
-             print(f"Error al resetear el entorno base en episodio {episode_num_user}: {e}")
+             print(f"Error reseteando entorno en episodio {ep_num}: {e}")
              traceback.print_exc()
-             continue
+             continue # Saltar este episodio si falla el reset
 
-        state = discretize_state(initial_observation, state_bins)
-        total_reward = 0.0
-        terminated = False
-        truncated = False
-        step = 0
+        estado = discretizar_estado(obs, state_bins)
+        recompensa_total = 0.0
+        terminado = False
+        truncado = False # Para gym > 0.26
+        pasos = 0
 
-        for step in range(max_timesteps):
-            action_idx = choose_action(state, q_table, epsilon, num_actions)
-            continuous_action = np.array([action_map[action_idx]], dtype=np.float32)
+        # Bucle dentro de un episodio (pasos)
+        for t in range(max_steps):
+            # Elegir acción (explorar o explotar)
+            accion_idx = elegir_accion(estado, q_table, epsilon, num_actions)
+            accion_continua = np.array([actions[accion_idx]], dtype=np.float32)
 
+            # Ejecutar la acción en el entorno
             try:
-                next_observation, reward, terminated, truncated, _ = base_env.step(continuous_action)
-                reward = float(reward) # Recompensa original
-                next_state = discretize_state(next_observation, state_bins) # Discretizar ANTES de modificar recompensa
+                obs_siguiente, recompensa, terminado, truncado, _ = env.step(accion_continua)
+                recompensa = float(recompensa) # Asegurarse de que es float
+                estado_siguiente = discretizar_estado(obs_siguiente, state_bins) # Discretizar ANTES de cambiar recompensa
 
-                # --- MODIFICACIÓN DE LA RECOMPENSA ---
-                action_value = continuous_action[0]
-                position = next_observation[0]
-                velocity = next_observation[1]
+                # --- MODIFICAR LA RECOMPENSA (Reward Shaping) ---
+                accion_valor = accion_continua[0]
+                posicion = obs_siguiente[0]
+                velocidad = obs_siguiente[1]
 
-                # 1. Recompensa por acción fuerte
-                reward += strong_action_reward_factor * abs(action_value)
+                # 1. Premio por usar acciones fuertes (más energía)
+                recompensa += strong_action_reward * abs(accion_valor)
 
-                # 2. Penalización base por paso (si no termina)
-                if not (terminated or truncated):
-                    reward -= step_penalty
+                # 2. Castigo base por cada paso (si no ha terminado)
+                if not (terminado or truncado):
+                    recompensa -= step_penalty
 
-                # 3. Penalización continua por velocidad lenta cerca del fondo
-                # Factor basado en posición (1 en el fondo, disminuye al alejarse)
-                pos_factor = math.exp(-position_penalty_sensitivity * (position - bottom_center_pos)**2)
-                # Factor basado en velocidad (1 a vel 0, disminuye al acelerar)
-                vel_factor = math.exp(-velocity_penalty_sensitivity * velocity**2)
-
-                # Penalización = max_penalty * factor_pos * factor_vel
-                continuous_penalty = max_bottom_slow_penalty * pos_factor * vel_factor
-                reward -= continuous_penalty # Aplicar penalización
-
-                # Descomentar para depuración:
-                # if step % 50 == 0 and continuous_penalty > 0.001: # Imprimir si la penalización es significativa
-                #    print(f"  Ep {episode_num_user} Step {step}: ContPenalty={continuous_penalty:.4f} (PosF={pos_factor:.3f}, VelF={vel_factor:.3f}) Pos={position:.3f}, Vel={velocity:.4f}")
-
-                # -------------------------------------
+                # 3. Castigo si va lento cerca del fondo del valle
+                # Factor por posición (1 si está justo en el fondo, 0 lejos)
+                factor_pos = math.exp(-pos_sensitivity * (posicion - bottom_pos)**2)
+                # Factor por velocidad (1 si está parado, 0 si va rápido)
+                factor_vel = math.exp(-vel_sensitivity * velocidad**2)
+                
+                # Castigo = MaxCastigo * factor_pos * factor_vel
+                castigo_continuo = max_penalty_bottom * factor_pos * factor_vel
+                recompensa -= castigo_continuo # Restar el castigo
 
             except Exception as e:
-                print(f"Error durante env.step en episodio {episode_num_user}, paso {step}: {e}")
+                print(f"Error en step episodio {ep_num}, paso {t}: {e}")
                 traceback.print_exc()
-                terminated = True
-                reward = 0.0 # Recompensa neutral en caso de error
+                terminado = True # Salir del episodio si hay error
+                recompensa = 0.0 # Recompensa neutra si falla
 
-            # --- Actualización Q-Table y estado ---
-            total_reward += reward # Acumular recompensa modificada
+            # --- Actualizar la Tabla Q ---
+            recompensa_total += recompensa # Acumular recompensa (ya modificada)
 
-            # Actualización de la Tabla Q
-            old_value = q_table[state + (action_idx,)]
-            next_max = np.max(q_table[next_state]) if not (terminated or truncated) else 0.0
-            target = reward + discount_factor * next_max
-            new_value = old_value + learning_rate * (target - old_value)
-            q_table[state + (action_idx,)] = new_value
+            # Fórmula Q-learning: Q(s,a) = Q(s,a) + lr * [r + gamma * max_a'(Q(s',a')) - Q(s,a)]
+            valor_antiguo = q_table[estado + (accion_idx,)]
+            
+            # El valor futuro es 0 si el episodio termina aquí
+            valor_max_siguiente = np.max(q_table[estado_siguiente]) if not (terminado or truncado) else 0.0
+            
+            # Calculamos el "objetivo" (target) hacia el que queremos mover el valor Q
+            objetivo = recompensa + gamma * valor_max_siguiente
+            
+            # Actualizamos el valor Q para el estado y acción actuales
+            valor_nuevo = valor_antiguo + lr * (objetivo - valor_antiguo)
+            q_table[estado + (accion_idx,)] = valor_nuevo
 
-            # Actualizar estado para la siguiente iteración
-            state = next_state
+            # Pasamos al siguiente estado
+            estado = estado_siguiente
+            pasos = t + 1 # Guardamos cuántos pasos dimos
 
-            if terminated or truncated:
-                break
+            if terminado or truncado:
+                break # Salir del bucle de pasos si termina el episodio
 
-        rewards_per_episode.append(total_reward)
+        todas_recompensas.append(recompensa_total)
 
-        # --- Lógica de grabación por chunks ---
-        is_within_record_range = record_start_episode <= episode_num_user <= record_end_episode
-        if is_within_record_range:
-            current_chunk_episode_count += 1
-            if total_reward >= best_reward_in_chunk:
-                best_reward_in_chunk = total_reward
-                best_episode_in_chunk = episode_num_user
+        # --- Lógica para grabar el mejor vídeo del chunk ---
+        esta_en_rango_grabacion = record_start <= ep_num <= record_end
+        if esta_en_rango_grabacion:
+            episodios_en_chunk += 1
+            # Si este episodio es mejor que el mejor que teníamos en este chunk
+            if recompensa_total >= mejor_recompensa_chunk:
+                mejor_recompensa_chunk = recompensa_total
+                mejor_episodio_chunk = ep_num
 
-            is_chunk_end = (current_chunk_episode_count >= record_chunk_size)
-            is_last_episode_in_range = (episode_num_user == record_end_episode)
-            is_last_overall_episode = (episode_num_user == episodes)
-            should_record_chunk = (is_chunk_end or is_last_episode_in_range or is_last_overall_episode) and best_episode_in_chunk != -1
-
-            if should_record_chunk:
-                if record_start_episode <= best_episode_in_chunk <= record_end_episode:
-                    run_and_record_episode(
-                        base_env=base_env, q_table=q_table, state_bins=state_bins,
-                        action_map=action_map, num_actions=num_actions, max_timesteps=max_timesteps,
-                        video_folder=video_folder, episode_to_record=best_episode_in_chunk,
-                        episode_reward=best_reward_in_chunk
+            # Comprobar si hemos terminado un chunk o es el último episodio
+            fin_chunk = (episodios_en_chunk >= record_every)
+            ultimo_ep_rango = (ep_num == record_end)
+            ultimo_ep_total = (ep_num == episodes)
+            
+            # Si debemos grabar (y hemos encontrado algún mejor episodio en el chunk)
+            if (fin_chunk or ultimo_ep_rango or ultimo_ep_total) and mejor_episodio_chunk != -1:
+                 # Asegurarnos de que el mejor episodio está dentro del rango permitido
+                 if record_start <= mejor_episodio_chunk <= record_end:
+                    jugar_y_grabar(
+                        env=env, q_table=q_table, state_bins=state_bins,
+                        actions=actions, num_actions=num_actions, max_steps=max_steps,
+                        video_folder=video_folder, ep=mejor_episodio_chunk,
+                        reward=mejor_recompensa_chunk
                     )
-                best_reward_in_chunk = -np.inf
-                best_episode_in_chunk = -1
-                current_chunk_episode_count = 0
+                 # Resetear para el siguiente chunk
+                 mejor_recompensa_chunk = -np.inf
+                 mejor_episodio_chunk = -1
+                 episodios_en_chunk = 0
 
-        # Decaimiento de Epsilon
-        epsilon = max(min_epsilon, epsilon * epsilon_decay)
+        # Reducir epsilon (menos exploración a medida que aprendemos)
+        epsilon = max(min_epsilon, epsilon * eps_decay)
 
-        # Imprimir progreso
-        if episode_num_user % 100 == 0 or episode_num_user == episodes:
-            actual_steps = step + 1
-            print(f"Episodio {episode_num_user}/{episodes}: "
-                  f"Recompensa: {total_reward:.2f}, "
-                  f"Pasos: {actual_steps}, "
+        # Imprimir progreso cada 100 episodios o al final
+        if ep_num % 100 == 0 or ep_num == episodes:
+            print(f"Episodio {ep_num}/{episodes}: "
+                  f"Recompensa: {recompensa_total:.2f}, "
+                  f"Pasos: {pasos}, "
                   f"Epsilon: {epsilon:.3f}")
 
-    return rewards_per_episode
+    return todas_recompensas
 
-def plot_rewards(
-    rewards: List[float],
-    plot_start_episode: int,
-    plot_end_episode: int,
-    moving_avg_window: int,
-    filename_prefix: str
-) -> None:
-    """Genera y guarda una gráfica de las recompensas por episodio."""
-    total_episodes = len(rewards)
-    if total_episodes == 0:
-        print("No hay recompensas para graficar.")
+# Función para dibujar la gráfica de recompensas
+def dibujar_grafica(recompensas, start_ep, end_ep, avg_window, filename):
+    """Genera y guarda una gráfica de las recompensas."""
+    num_episodios = len(recompensas)
+    if num_episodios == 0:
+        print("No hay recompensas para dibujar.")
         return
 
-    start_index = max(0, plot_start_episode - 1)
-    end_index = min(total_episodes, plot_end_episode)
+    # Ajustar índices para el slicing (Python empieza en 0)
+    start_idx = max(0, start_ep - 1)
+    end_idx = min(num_episodios, end_ep)
 
-    if start_index >= end_index:
-        print(f"\nAdvertencia: Rango de episodios para graficar ({plot_start_episode}-{plot_end_episode}) inválido o vacío.")
+    if start_idx >= end_idx:
+        print(f"\nRango de episodios para gráfica ({start_ep}-{end_ep}) no válido.")
         return
 
-    rewards_subset = rewards[start_index:end_index]
-    episode_numbers_subset = list(range(start_index + 1, end_index + 1))
+    # Seleccionar el trozo de recompensas y los números de episodio correspondientes
+    recompensas_sub = recompensas[start_idx:end_idx]
+    episodios_sub = list(range(start_idx + 1, end_idx + 1))
 
-    if not episode_numbers_subset:
-         print(f"\nAdvertencia: No hay episodios en el rango seleccionado para graficar ({plot_start_episode}-{plot_end_episode}).")
+    if not episodios_sub:
+         print(f"\nNo hay episodios en el rango ({start_ep}-{end_ep}) para la gráfica.")
          return
 
-    plt.figure(figsize=(12, 6))
-    plt.plot(episode_numbers_subset, rewards_subset, label='Recompensa por Episodio', alpha=0.6, linewidth=0.8)
+    plt.figure(figsize=(10, 5)) # Tamaño de la figura
+    # Dibujar la recompensa de cada episodio (un poco transparente)
+    plt.plot(episodios_sub, recompensas_sub, label='Recompensa Episodio', alpha=0.5, linewidth=1)
 
-    if len(rewards) >= moving_avg_window:
-        moving_avg_full = np.convolve(rewards, np.ones(moving_avg_window) / moving_avg_window, mode='valid')
-        moving_avg_episodes_full = list(range(moving_avg_window, total_episodes + 1))
-        ma_plot_indices = [
-            i for i, ep_num in enumerate(moving_avg_episodes_full)
-            if plot_start_episode <= ep_num <= plot_end_episode
-        ]
-        if ma_plot_indices:
-            moving_avg_subset = moving_avg_full[ma_plot_indices]
-            moving_avg_episodes_subset = [moving_avg_episodes_full[i] for i in ma_plot_indices]
-            plt.plot(moving_avg_episodes_subset, moving_avg_subset,
-                     label=f'Media Móvil ({moving_avg_window} episodios)', color='red', linewidth=1.5)
-        else:
-             print(f"Advertencia: La media móvil no tiene puntos dentro del rango de graficación ({plot_start_episode}-{plot_end_episode}).")
+    # Calcular y dibujar la media móvil para suavizar la curva
+    if len(recompensas) >= avg_window:
+        # Usamos convolve para calcular la media móvil de todas las recompensas
+        media_movil_total = np.convolve(recompensas, np.ones(avg_window)/avg_window, mode='valid')
+        # Los episodios correspondientes a la media móvil (empiezan desde avg_window)
+        episodios_media_total = list(range(avg_window, num_episodios + 1))
+        
+        # Filtrar para mostrar solo la media móvil dentro del rango de la gráfica
+        media_movil_sub = []
+        episodios_media_sub = []
+        for i, ep_num in enumerate(episodios_media_total):
+            if start_ep <= ep_num <= end_ep:
+                media_movil_sub.append(media_movil_total[i])
+                episodios_media_sub.append(ep_num)
+                
+        if episodios_media_sub: # Si hay puntos de media móvil en el rango
+            plt.plot(episodios_media_sub, media_movil_sub, 
+                     label=f'Media Móvil ({avg_window} ep)', color='red', linewidth=2)
+        # else:
+             # print(f"La media móvil no cae en el rango de la gráfica ({start_ep}-{end_ep}).")
 
     plt.xlabel('Episodio')
     plt.ylabel('Recompensa Total')
-    plt.title(f'Progreso del Aprendizaje Q-Learning (Episodios {start_index + 1} a {end_index})')
-    plt.legend()
-    plt.grid(True, linestyle='--', alpha=0.6)
-    plt.tight_layout()
-    output_filename = f"{filename_prefix}_ep_{start_index + 1}_to_{end_index}.png"
+    plt.title(f'Recompensas Q-Learning (Episodios {start_idx + 1} a {end_idx})')
+    plt.legend() # Mostrar leyenda (los labels que pusimos en plot)
+    plt.grid(True, linestyle=':') # Poner una rejilla punteada
+    plt.tight_layout() # Ajustar para que no se corten los ejes
+    
+    # Guardar la gráfica
+    output_file = f"{filename}_ep_{start_idx + 1}_to_{end_idx}.png"
     try:
-        plt.savefig(output_filename)
-        print(f"\nGráfica guardada como: '{output_filename}'")
+        plt.savefig(output_file)
+        print(f"\nGráfica guardada como: '{output_file}'")
     except Exception as e:
-        print(f"\nError al guardar la gráfica '{output_filename}': {e}")
-        traceback.print_exc()
-    plt.close()
+        print(f"\nError guardando la gráfica '{output_file}': {e}")
+        # traceback.print_exc()
+    plt.close() # Cerrar la figura para liberar memoria
 
-# --- Flujo Principal ---
+# --- Código Principal ---
 if __name__ == "__main__":
-    print("Iniciando script de Q-Learning para MountainCarContinuous...")
-    base_env = None
+    print("Empezando script Q-Learning para MountainCarContinuo...")
+    
+    env = None # Inicializar por si falla la creación
     try:
-        base_env, state_bins = setup_environment_and_discretization(
-            ENV_NAME, STATE_BINS_COUNT, render_mode='rgb_array'
-        )
-    except Exception as e:
-        print(f"Error fatal al configurar el entorno: {e}")
-        traceback.print_exc()
-        exit(1)
-
-    q_table = initialize_q_table(STATE_BINS_COUNT, NUM_ACTIONS)
-    all_rewards = []
-    try:
-        all_rewards = train_agent(
-            base_env=base_env,
-            q_table=q_table,
+        # 1. Preparar entorno y discretización
+        env, state_bins = preparar_entorno(ENV_NAME, NUM_BINS)
+        
+        # 2. Crear tabla Q
+        q_tabla = crear_q_table(NUM_BINS, NUM_ACTIONS)
+        
+        # 3. Entrenar al agente
+        recompensas = entrenar(
+            env=env,
+            q_table=q_tabla,
             state_bins=state_bins,
-            action_map=ACTION_MAP,
+            actions=ACTIONS,
             num_actions=NUM_ACTIONS,
             episodes=EPISODES,
-            max_timesteps=MAX_TIMESTEPS_PER_EPISODE,
-            learning_rate=LEARNING_RATE,
-            discount_factor=DISCOUNT_FACTOR,
-            initial_epsilon=INITIAL_EPSILON,
-            epsilon_decay=EPSILON_DECAY,
+            max_steps=MAX_STEPS,
+            lr=LR,
+            gamma=GAMMA,
+            start_epsilon=EPSILON,
+            eps_decay=EPSILON_DECAY,
             min_epsilon=MIN_EPSILON,
             step_penalty=STEP_PENALTY,
-            strong_action_reward_factor=STRONG_ACTION_REWARD_FACTOR,
-            bottom_center_pos=BOTTOM_CENTER_POS,                   # <-- Pasar nuevo parámetro
-            max_bottom_slow_penalty=MAX_BOTTOM_SLOW_PENALTY,       # <-- Pasar nuevo parámetro
-            position_penalty_sensitivity=POSITION_PENALTY_SENSITIVITY, # <-- Pasar nuevo parámetro
-            velocity_penalty_sensitivity=VELOCITY_PENALTY_SENSITIVITY, # <-- Pasar nuevo parámetro
+            strong_action_reward=STRONG_ACTION_REWARD,
+            bottom_pos=BOTTOM_POS,                   
+            max_penalty_bottom=MAX_PENALTY_BOTTOM,       
+            pos_sensitivity=POS_SENSITIVITY, 
+            vel_sensitivity=VEL_SENSITIVITY, 
             video_folder=VIDEO_FOLDER,
-            record_start_episode=RECORD_START_EPISODE,
-            record_end_episode=RECORD_END_EPISODE,
-            record_chunk_size=RECORD_CHUNK_SIZE
+            record_start=RECORD_START,
+            record_end=RECORD_END,
+            record_every=RECORD_EVERY
         )
-        print("\n--- Entrenamiento Completado ---")
+        print("\n--- Entrenamiento Terminado ---")
 
-        if all_rewards:
-            print("\n--- Generando Gráfica de Recompensas ---")
-            plot_rewards(
-                rewards=all_rewards,
-                plot_start_episode=PLOT_START_EPISODE,
-                plot_end_episode=PLOT_END_EPISODE,
-                moving_avg_window=MOVING_AVG_WINDOW,
-                filename_prefix=PLOT_FILENAME_PREFIX
+        # 4. Dibujar gráfica si hay recompensas
+        if recompensas:
+            print("\n--- Creando Gráfica ---")
+            dibujar_grafica(
+                recompensas=recompensas,
+                start_ep=PLOT_START,
+                end_ep=PLOT_END,
+                avg_window=AVG_WINDOW,
+                filename=PLOT_NAME
             )
         else:
-            print("\n--- No hay recompensas para graficar (posible error durante el entrenamiento) ---")
+            print("\n--- No se generaron recompensas (quizás hubo un error antes) ---")
 
     except Exception as e:
-        print(f"\n--- Error durante el entrenamiento o graficación: {e} ---")
-        traceback.print_exc()
+        print(f"\n--- ¡ERROR! Algo salió mal: {e} ---")
+        traceback.print_exc() # Imprimir el error detallado
     finally:
-        if base_env is not None:
+        # 5. Cerrar el entorno al final (importante!)
+        if env is not None:
             try:
-                base_env.close()
-                print("\nEntorno base cerrado.")
+                env.close()
+                print("\nEntorno cerrado.")
             except Exception as e:
-                print(f"Error al cerrar el entorno base: {e}")
-                traceback.print_exc()
-        print(f"Vídeos (si se generaron) guardados en: '{VIDEO_FOLDER.resolve()}'")
-        print("Script finalizado.")
+                print(f"Error al cerrar el entorno: {e}")
+        
+        # Informar dónde se guardaron los vídeos
+        print(f"Vídeos (si los hay) en: '{VIDEO_FOLDER.resolve()}'")
+        print("Script terminado.")
