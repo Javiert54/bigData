@@ -1,0 +1,34 @@
+canvas {
+    border: 1px solid black;
+}
+
+.form-container {
+    margin-bottom: 20px;
+}
+
+.form-container input, .form-container select, .form-container button {
+    margin: 5px;
+}
+
+#status {
+	display: none;
+}
+#statusText {
+	font-size: 15px;
+	color: green;
+	margin-top: 10px;
+}
+pre, code {
+    background-color: #2d2d2d; /* Fondo oscuro */
+    color: #ffffff; /* Texto claro */
+    border-radius: 5px; /* Bordes redondeados */
+    font-family: monospace; /* Fuente estilo código */
+    overflow-x: auto; /* Añadir scroll horizontal si el código es largo */
+    width: fit-content; /* Ajusta al contenido */
+    min-width: 30em;
+}
+
+pre {
+    padding: 10px; /* Espaciado interno */
+    white-space: pre-wrap; /* Mantener los saltos de línea */
+}

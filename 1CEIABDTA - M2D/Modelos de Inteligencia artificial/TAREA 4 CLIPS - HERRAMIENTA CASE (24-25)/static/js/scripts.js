@@ -568,7 +568,7 @@ function generateXMI() {
     return xmi;
 }
 
-async function saveXMIToServer() {
+async function showJavaCode() {
     const xmi = generateXMI();
     const blob = new Blob([xmi], { type: 'application/xml' });
     const formData = new FormData();
@@ -589,12 +589,19 @@ async function saveXMIToServer() {
 
             const result = await processResponse.json();
             const statusDiv = document.getElementById('status');
+            const statusText = document.getElementById('statusText');
+            const javaCode = document.getElementById('javaCode');
+
+            statusDiv.style.display = 'block'; // Ensure the status div is visible
 
             if (processResponse.ok) {
-                statusDiv.innerHTML = `<p style="color: green;">${result.message}</p><textarea>${result.output}</textarea>`;
-
+                statusText.textContent = result.message;
+                javaCode.textContent = result.output;
+                statusDiv.style.display = 'block';
             } else {
-                statusDiv.innerHTML = `<p style="color: red;">Error: ${result.error}</p>`;
+                statusText.style.color = 'red';
+                statusText.textContent = `Error: ${result.error}`;
+                javaCode.textContent = '';
             }
         } else {
             console.error('Error saving XMI file:', response.statusText);

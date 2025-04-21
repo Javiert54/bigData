@@ -2,17 +2,7 @@
 <html>
 <head>
     <title>Diagrama UML de Clases</title>
-    <style>
-        canvas {
-            border: 1px solid black;
-        }
-        .form-container {
-            margin-bottom: 20px;
-        }
-        .form-container input, .form-container select, .form-container button {
-            margin: 5px;
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
     <div class="form-container">
@@ -52,20 +42,22 @@
         <select id="relationType">
             <option value="herencia">Herencia</option>
             <option value="asociación">Asociación</option>
-			<option value="asociaciónDireccional">Asociación direccional</option>
+            <option value="asociaciónDireccional">Asociación direccional</option>
             <option value="dependencia">Dependencia</option>
-			<option value="composición">Composición</option>
-			<option value="agregación">Agregación</option>
+            <option value="composición">Composición</option>
+            <option value="agregación">Agregación</option>
         </select>
         <label for="multiplicityFrom">Multiplicidad Origen:</label>
         <input type="text" id="multiplicityFrom" placeholder="1" size="3">
         <label for="multiplicityTo">Multiplicidad Destino:</label>
         <input type="text" id="multiplicityTo" placeholder="*" size="3">
         <button onclick="addRelation()">Agregar Relación</button>
-		<br><button onclick="saveXMIToServer()">Download CLP</button>
-		
+        <br><button onclick="showJavaCode()">Mostrar Código en JAVA</button>
     </div>
-    <div id="status"></div>
+    <div id="status">
+        <p id="statusText"></p>
+        <pre id="javaCode"><code></code></pre>
+    </div>
 
     <canvas id="umlCanvas" width="1024" height="768"></canvas>
 
