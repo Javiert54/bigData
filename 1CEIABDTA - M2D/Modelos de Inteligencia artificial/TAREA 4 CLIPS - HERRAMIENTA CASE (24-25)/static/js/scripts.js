@@ -568,37 +568,6 @@ function generateXMI() {
     return xmi;
 }
 
-function downloadXMI() {
-	const xmi = generateXMI();
-	const blob = new Blob([xmi], { type: 'application/xml' });
-	const url = URL.createObjectURL(blob);
-	const a = document.createElement('a');
-	a.href = url;
-	a.download = 'diagram.xmi';
-	document.body.appendChild(a);
-	a.click();
-	document.body.removeChild(a);
-}
-
-async function downloadGeneratedFile() {
-    try {
-        const response = await fetch('/generated_files/output.clp');
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'output.clp';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-    } catch (error) {
-        console.error('Error downloading the file:', error);
-    }
-}
-
 async function saveXMIToServer() {
     const xmi = generateXMI();
     const blob = new Blob([xmi], { type: 'application/xml' });
@@ -633,5 +602,4 @@ async function saveXMIToServer() {
     } catch (error) {
         console.error('Error saving XMI file:', error);
     }
-    downloadGeneratedFile();
 }

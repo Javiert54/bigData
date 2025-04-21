@@ -1,19 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
   <XMI xmi.version="2.1" xmlns:xmi="http://schema.omg.org/spec/XMI/2.1" xmlns:uml="http://www.omg.org/spec/UML/20090901">
   <uml:Model xmi:type="uml:Model" name="UMLModel">
-    <packagedElement xmi:type="uml:Class" name="pepe">
-    </packagedElement>
-    <packagedElement xmi:type="uml:Class" name="pepe2">
-    </packagedElement>
     <packagedElement xmi:type="uml:Class" name="pepe3">
-    </packagedElement>
-    <packagedElement xmi:type="uml:Generalization" memberEnd="pepe pepe2">
-    </packagedElement>
-    <packagedElement xmi:type="uml:Generalization" memberEnd="pepe2 pepe3">
-    </packagedElement>
-    <packagedElement xmi:type="uml:Association" memberEnd="pepe2 pepe3">
-      <ownedEnd type="pepe2" multiplicity1="1" />
-      <ownedEnd type="pepe3" multiplicity2="*" />
+      <ownedAttribute visibility="+" name="bb" type="string" />
     </packagedElement>
   </uml:Model>
 </XMI>
