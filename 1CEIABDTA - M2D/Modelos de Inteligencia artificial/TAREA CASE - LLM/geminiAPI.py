@@ -3,9 +3,9 @@ MODEL = "gemini-2.0-flash"
 # java_code = input("Enter the Java code to be translated > ")
 
 with open("prompt.txt") as f:
-    java_code = f.read().strip()
-    
-PROMPT = f"""Please, translate the code in java provided to the programming language requested using this JSON schema:
+    JAVA_CODE = f.read().strip()
+LANGUAGE_REQUESTED = "python"
+PROMPT = """Please, translate the code in java provided to the programming language requested using this JSON schema:
 {{
     "syntaxCorrect": "boolean",
     "codeInJava": "string",
@@ -29,9 +29,11 @@ Here is a brief explanation of the JSON schema:
 - codeTranslated: the code translated to the requested programming language.
 
 The code in Java is:
-{java_code}
-"""
-# {input("Enter your prompt > ")}
+%s
+
+The programming language requested is: %s
+""" % (JAVA_CODE, LANGUAGE_REQUESTED)
+
 try:
     with open("geminiAPI-key.txt") as f:
         api_key = f.read().strip()
