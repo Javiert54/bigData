@@ -1,5 +1,6 @@
 from google import genai
 from pydantic import BaseModel
+import json
 
 # GET the API key: https://aistudio.google.com/app/apikey?hl=es-419
 
@@ -8,8 +9,12 @@ from pydantic import BaseModel
 MODEL = "gemini-2.0-flash"
 
 # List of programming languages supported for translation
-LANGUAGE_REQUESTED = ["Python", "JavaScript", "C++", "Go", "Ruby", "PHP", "Swift", "Kotlin"]
+with open("languages.json") as f:
+    # Load the list of languages from the JSON file
+    LANGUAGE_REQUESTED = json.load(f)["languages"]
+print(LANGUAGE_REQUESTED)
 
+# Define a Pydantic model for the request body
 # Define a Pydantic model for error items in the JSON schema
 class ErrorItem(BaseModel):
     errorType: str  # Type of the error (e.g., syntax, runtime, etc.)

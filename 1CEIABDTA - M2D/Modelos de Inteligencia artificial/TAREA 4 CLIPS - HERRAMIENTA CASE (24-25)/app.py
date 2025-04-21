@@ -4,10 +4,23 @@ import os
 
 app = Flask(__name__)
 
+with open("languages.txt") as f:
+    # ["Python", "JavaScript", "C++", "Go", "Ruby", "PHP", "Swift", "Kotlin"]
+    LANGUAGE_REQUESTED = json.load(f)["languages"]
+
 # Ruta para servir la página principal
 @app.route('/')
 def home():
     return render_template('index.html')
+
+@app.route('/get_languages', methods=['GET'])
+def get_languages():
+    """
+    Endpoint to get the list of programming languages supported for translation.
+    Returns:
+        JSON response with the list of programming languages.
+    """
+    return jsonify(LANGUAGE_REQUESTED)
 
 # Ruta para manejar el archivo generado (diagram.xmi) y ejecutar Traductor.py
 @app.route('/process-diagram', methods=['POST'])

@@ -568,6 +568,32 @@ function generateXMI() {
     return xmi;
 }
 
+async function getLanguages() {
+    try {
+        const response = await fetch('/get_languages', { // Updated route
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            const languages = await response.json();
+            const languageSelect = document.getElementById('languageSelect');
+            languages.forEach(lang => {
+                const option = document.createElement('option');
+                option.value = lang;
+                option.textContent = lang;
+                languageSelect.appendChild(option);
+            });
+        } else {
+            console.error('Error fetching languages:', response.statusText);
+        }
+    } catch (error) {
+        console.error('Error fetching languages:', error);
+    }
+}
+
 async function showJavaCode() {
     const xmi = generateXMI();
     const blob = new Blob([xmi], { type: 'application/xml' });
@@ -591,7 +617,7 @@ async function showJavaCode() {
             const statusDiv = document.getElementById('status');
             const statusText = document.getElementById('statusText');
             const javaCode = document.getElementById('javaCode');
-
+            getLanguages(); // Fetch languages after processing the diagram
             statusDiv.style.display = 'block'; // Ensure the status div is visible
 
             if (processResponse.ok) {
@@ -609,4 +635,9 @@ async function showJavaCode() {
     } catch (error) {
         console.error('Error saving XMI file:', error);
     }
+}
+
+async function translateFromJava() {
+    // console.log('Translating...');
+    
 }
