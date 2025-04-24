@@ -1,10 +1,11 @@
 from flask import Flask, render_template, request, jsonify, send_from_directory
+import json
 import subprocess
 import os
 
 app = Flask(__name__)
 
-with open("languages.txt") as f:
+with open("languages.json") as f:
     # ["Python", "JavaScript", "C++", "Go", "Ruby", "PHP", "Swift", "Kotlin"]
     LANGUAGE_REQUESTED = json.load(f)["languages"]
 
