@@ -36,13 +36,13 @@ CONFIG = {'response_mime_type': 'application/json',
 try:
     with open("geminiAPI-key.txt") as f:
         api_key = f.read().strip()
+        client = genai.Client(api_key=api_key)
 except FileNotFoundError:
     # Handle the case where the API key file is missing
     print("Error: geminiAPI-key.txt not found. Please create the file or set the GEMINI_API_KEY environment variable.")
-    exit()
+    api_key = None
+    client = None
 
-# Initialize the Gemini API client
-client = genai.Client(api_key=api_key)
 
 def geminiResponse(java_code, language_requested=0, client=client, model=MODEL, config=CONFIG):
     """
@@ -106,10 +106,8 @@ def geminiResponse(java_code, language_requested=0, client=client, model=MODEL, 
 if __name__ == "__main__":
     # Run the geminiResponse function with the Java code and Python as the requested language
     JAVA_CODE = """
-    public class HelloWorld {
-        public static void main(String[] args) {
-            System.out.println("Hello, World!");
-        }
+    // Java code for class pepe3f
+    public class pepe3f {
     }
     """
     # 0 = Python, 1 = JavaScript, 2 = C++, 3 = Go, 4 = Ruby, 5 = PHP, 6 = Swift, 7 = Kotlin

@@ -56,10 +56,18 @@
     </div>
     <div id="status">
         <p id="statusText"></p>
-        <pre id="javaCode"><code></code></pre>
+        <pre id="preJavaCode"><code id ="javaCode"></code></pre>
+        <br><p>Debes conseguir tu propia apikey, crear el archivo "geminiAPI-key.txt" en el directorio raíz del proyecto y poner la API-key dentro. <br>
+            Consigue tu API key: 
+            <a href='https://aistudio.google.com/app/apikey?hl=es-419'>geminiAPI</a>
+        </p>
         <br><button onclick="translateFromJava()">traducir a otro lenguaje</button>
         <select id="languageSelect">
         </select>
+        <p id="translationStatus"></p>
+        <pre id="preCode"><code id ="Code"></code></pre>
+        Errors:
+        <pre id="preErrors"><code id ="Errors"></code></pre>
     </div>
 
     <canvas id="umlCanvas" width="1024" height="768"></canvas>

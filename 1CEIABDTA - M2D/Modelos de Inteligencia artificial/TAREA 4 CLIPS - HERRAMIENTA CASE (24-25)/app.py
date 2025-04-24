@@ -2,6 +2,8 @@ from flask import Flask, render_template, request, jsonify, send_from_directory
 import json
 import subprocess
 import os
+import geminiAPI
+
 
 app = Flask(__name__)
 
@@ -67,5 +69,28 @@ def get_output_clp():
     except FileNotFoundError:
         return jsonify({'error': 'Archivo output.clp no encontrado'}), 404
 
+
+@app.route('/translateFromJava', methods=['POST'])
+def translateFromJava():
+    if os.path.exists('geminiAPI-key.txt'):
+        try:
+            data = request.get_json()
+            print("Received JSON data:", data)  # Debugging line
+            if not data:
+                return jsonify({'error': 'No JSON data received'}), 400
+            
+            response_str = geminiAPI.geminiResponse(data['javaCode'], data['selectedLanguage'])
+            data = json.loads(response_str)
+            
+            
+            return jsonify({'message': 'JSON received successfully', 'data': data}), 200
+        except Exception as e:
+            app.logger.error(f'Error processing JSON: {e}')
+            return jsonify({'error': f'Error processing JSON: {e}'}), 500
+    else:
+        return jsonify({'error': 'geminiAPI-key.txt not found'}), 500
+
+
 if __name__ == '__main__':
     app.run(debug=True)
+    

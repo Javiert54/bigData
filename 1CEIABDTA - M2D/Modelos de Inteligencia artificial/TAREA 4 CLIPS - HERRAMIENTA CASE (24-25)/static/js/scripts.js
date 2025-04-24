@@ -9,31 +9,6 @@ let startDragX, startDragY;
 const classes = [];
 const relations = [];
 
-// document.getElementById('generate-diagram').addEventListener('click', 
-// 	async () => { 
-// 		try { 
-// 			// Realizar la solicitud POST al servidor Flask 
-// 			const response = await fetch('/process-diagram', { 
-// 				method: 'POST', 
-// 				headers: { 
-// 					'Content-Type': 'application/json', 
-// 				}, 
-// 			}); 
-	 
-// 			// Manejar la respuesta 
-// 			const result = await response.json(); 
-// 			const statusDiv = document.getElementById('status'); 
-	 
-// 			if (response.ok) { 
-// 				statusDiv.innerHTML = `<p style="color: green;">${result.message}</p>`; 
-// 			} else { 
-// 				statusDiv.innerHTML = `<p style="color: red;">Error: ${result.error}</p>`; 
-// 			} 
-// 		} catch (error) { 
-// 			console.error('Error al procesar el diagrama:', error); 
-// 	        document.getElementById('status').innerHTML = `<p style="color: red;">Error inesperado: ${error.message}</p>`; 
-//     } 
-// })
 
 class UMLClass {
     constructor(name, x, y) {
@@ -638,6 +613,39 @@ async function showJavaCode() {
 }
 
 async function translateFromJava() {
-    // console.log('Translating...');
-    
+    document.getElementById('translationStatus').innerHTML = 'Translating...';
+    const selectedLanguage = document.getElementById('languageSelect').selectedIndex;
+    const languageName = document.getElementById('languageSelect').options[selectedLanguage].textContent;
+    console.log('Translating to ' + languageName);
+
+    const javaCode = document.getElementById('javaCode').textContent;
+
+    try {
+        const response = await fetch('/translateFromJava', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                selectedLanguage: selectedLanguage,
+                javaCode: javaCode
+            })
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            console.log('Translation result:', result);
+
+            const translatedCode = document.getElementById('Code');
+            translatedCode.textContent = result.data.codeTranslated;
+            document.getElementById('translationStatus').innerHTML = 'Translation completed successfully!';
+            document.getElementById('Code').style.display = 'block'; // Show the translated code
+            document.getElementById('translationStatus').style.display = 'block'; // Show the translation status
+            document.getElementById('Errors').innerHTML = result.data.errors
+        } else {
+            console.error('Error translating code:', response.statusText);
+        }
+    } catch (error) {
+        console.error('Error translating code:', error);
+    }
 }

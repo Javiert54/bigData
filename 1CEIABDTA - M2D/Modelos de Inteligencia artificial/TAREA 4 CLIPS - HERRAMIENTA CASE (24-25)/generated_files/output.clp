@@ -39,7 +39,6 @@
    (slot part)
    (slot multiplicity))
 (deffacts initial-facts
-  (class (name pepe3f) (attributes ) (operations ))
 )
 
 (defrule generate-java-code
