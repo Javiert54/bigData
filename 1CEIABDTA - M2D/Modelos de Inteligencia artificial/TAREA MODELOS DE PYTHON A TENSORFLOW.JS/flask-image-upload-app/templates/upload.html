@@ -1,0 +1,15 @@
+<form id="uploadForm" enctype="multipart/form-data">
+  <input type="file" name="file" accept="image/*" required>
+  <button type="submit">Clasificar</button>
+</form>
+<div id="result"></div>
+<script>
+document.getElementById('uploadForm').onsubmit = async function(e) {
+  e.preventDefault();
+  const formData = new FormData(this);
+  const response = await fetch('/classify', { method: 'POST', body: formData });
+  const result = await response.json();
+  document.getElementById('result').innerText = 
+    response.ok ? `Clase: ${result.class} (confianza: ${result.confidence.toFixed(2)})` : result.error;
+};
+</script>
